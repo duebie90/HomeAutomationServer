@@ -4,34 +4,45 @@
 #include <QObject>
 #include <QtNetwork>
 #include <iostream>
-using namespace std;
+#include <datareceiver.h>
+#include <datatransmitter.h>
 
+using namespace std;
 class Endpoint: public QObject
 {
     Q_OBJECT
 public:
-    Endpoint(QTcpSocket* socket, QString alias, QString type);
+    Endpoint(QTcpSocket* socket, QString alias, QString type, QString MAC="", QObject* parent=0);
     void updateSocket(QTcpSocket* newSocket);
     bool isConnected();
+    void setConnected(bool connected);
     QString getAlias();
     QString getType();
     QString getMAC();
+    void setState(bool state);
+    bool getState();
+    void requestState(bool state);
+    void sendMessage(MessageType type, QByteArray message);
     enum EndpointType {
         switchbox,
         temperatureSensor,
         lightSwitch
     };
 
-private slots:
-    void slotReceivedData();
+private slots:    
     void slotDisconnected();
+    void slotReceivedState(QString MAC, bool state);    
+    void slotStateRequested(bool state);
 private:
     void receivedData();
     QString alias;
     QString type;
-    QString MAC;
+    QString MAC;    
     QTcpSocket* clientSocket;
+    DataReceiver* dataReceiver;
+    DataTransmitter* dataTransmitter;
     bool connected;
+    bool state;
 };
 
 #endif // ENDPOINT_H

@@ -6,6 +6,7 @@
 #include <uiconnection.h>
 #include <QtNetwork>
 #include <tcpserver.h>
+#include <datareceiver.h>
 
 
 class HomeAutomationController: public QObject
@@ -15,14 +16,19 @@ public:
     HomeAutomationController(QObject* parent=0);
     ~HomeAutomationController();
 private slots:
-    void slotClientConnected(QTcpSocket* clientSocket);
-    void slotUnidentifiedClientMessage();
+    void slotClientConnected(QTcpSocket* clientSocket);      
+    void slotUpdateUis();
+    void slotProcessMessageNewUi(QTcpSocket* socket, QString alias, QString pass, QString MAC);
+    void slotProcessMessageNewEndpoint(QTcpSocket* socket, QString alias, QString type, QString MAC);
+    //forwarding of a state change Request to endpoints (called by UiConnection)
+    void slotForwardStateChangeRequest(QString MAC, bool state);
+
 private:
-    bool processMessageNewUi(QString message, QTcpSocket* socket);
-    bool processMessageNewEndpoint(QString message, QTcpSocket* socket);
     void addUiConnection(QTcpSocket* socket, QString alias);
     void addEndpoint(QTcpSocket* socket, QString alias, QString type, QString MAC);
 
+    DataReceiver* dataReceiver;
+    DataTransmitter* dataTransmitter;
     TcpServer* tcpServer;
     //Recently connected clients:
     //We wait for them to send their identification before they are visualized
@@ -39,6 +45,8 @@ private:
     QMap<QString, Endpoint*> mapMacToEndpoint;
     //QUuid hacUuid;
     QString pwd;
+    QTimer* uiUpdateTimer;
+    QSettings settings;
 };
 
 #endif // HOMEAUTOMATIONCONTROLLER_H

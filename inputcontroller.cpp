@@ -19,7 +19,7 @@ void InputController::slotProcessInput() {
         cin>>input;
     } while(input != "q" && input != "quit" && input != "exit" );
     //eventually quit
-    cout<<"Quittin Application\n";
+    cout<<"Quitting Application\n";
     this->inputControllerThread->terminate();
     emit signalQuit();
 }

@@ -2,25 +2,32 @@
 #include <QtNetwork>
 
 
-UiConnection::UiConnection(QTcpSocket* socket, QString alias)
+UiConnection::UiConnection(QTcpSocket* socket, QString alias, QObject* parent):
+    QObject(parent)
 {
     cout<<"UI Connection Object created with alias "<<alias.toStdString()<<".\n";
     this->clientSocket = socket;
     this->alias = alias;
-    connect(clientSocket, SIGNAL(readyRead()), this, SLOT(slotReceivedData()));
+    this->dataReceiver =  new DataReceiver();
+    this->dataTransmitter = new DataTransmitter(socket);
+    this->connected = true;
+    connect(clientSocket, SIGNAL(readyRead()), dataReceiver, SLOT(slotReceivedData()));
     connect(clientSocket, SIGNAL(disconnected()), this, SLOT(slotDisconnected()));
-
+    //connections from data receiver
+    connect(dataReceiver, SIGNAL(signalReceivedUiEndpointStateRequest(QString,bool)),
+            this, SIGNAL(signalReceivedUiEndpointStateRequest(QString,bool)));
+}
+void UiConnection::sendMessage(QByteArray message){
+    this->clientSocket->write(message, message.length());
 }
 
-void UiConnection::slotReceivedData() {
-    QByteArray data = this->clientSocket->readAll();
-    QString message = QString(data);
-    QHostAddress remoteAddress = clientSocket->peerAddress();
-    cout<<__FUNCTION__;
-    cout<<"Alias: "<<alias.toStdString()<<" IP:"<<remoteAddress.toString().toStdString()<<" data:"<<message.toStdString()<<"\n";
+void UiConnection::slotReceivedUiEndpointStateRequest(QString MAC, bool state) {
+
+
 }
 
 void UiConnection::slotDisconnected() {
     cout<<"Client Disconnected\n";
+    this->connected = false;
 }
 
