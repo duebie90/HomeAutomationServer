@@ -59,10 +59,10 @@ QByteArray DataTransmitter::prepareMessage(MessageType type, QByteArray payload)
     message.append(payload);
     message.append(0x03);
     message.append(0x04);
-    //message.at(n) = 0x02; //payload END character
-    //message.at(n) = 0x03; //message END character
-
-    //ToDo add everything
+    message.append(0x02); //payload END character
+    message.append(0x03); //message END character
+    message.append(0x0D); //CR
+    message.append(0x0A); //LF
     return message;
 }
 

@@ -1,4 +1,4 @@
-QT += core network
+QT += core network sql
 #QT -= gui
 
 TARGET = HomeAutomationServer
@@ -15,7 +15,8 @@ SOURCES += main.cpp \
     mainapplication.cpp \
     inputcontroller.cpp \
     datareceiver.cpp \
-    datatransmitter.cpp
+    datatransmitter.cpp \
+    persistanceservice.cpp
 
 HEADERS += \
     endpoint.h \
@@ -26,7 +27,8 @@ HEADERS += \
     inputcontroller.h \
     datareceiver.h \
     messagetype.h \
-    datatransmitter.h
+    datatransmitter.h \
+    persistanceservice.h
 
 RC_FILE =  app.rc
 

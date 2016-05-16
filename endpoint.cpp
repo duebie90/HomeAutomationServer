@@ -19,6 +19,15 @@ Endpoint::Endpoint(QTcpSocket* socket, QString alias, QString type, QString MAC,
     this->connected = true;
 }
 
+Endpoint::~Endpoint() {
+    qDebug()<<__FUNCTION__;
+    slotDisconnected();
+    delete dataReceiver;
+    delete dataTransmitter;
+    this->clientSocket->close();
+    delete clientSocket;
+}
+
 void Endpoint::slotReceivedState(QString MAC, bool state) {
     qDebug()<<__FUNCTION__<<"new State= "<<state;
     if(MAC == this->MAC) {
@@ -40,8 +49,10 @@ void Endpoint::sendMessage(MessageType type, QByteArray message){
 void Endpoint::slotDisconnected() {
     cout<<__FUNCTION__<<" Alias "<<this->alias.toStdString()<<"\n";
     this->connected = false;
-    disconnect(clientSocket, SIGNAL(readyRead()), dataReceiver, SLOT(slotReceivedData()));
-    disconnect(clientSocket, SIGNAL(disconnected()), this, SLOT(slotDisconnected()));
+    if (clientSocket != NULL) {
+        disconnect(clientSocket, SIGNAL(readyRead()), dataReceiver, SLOT(slotReceivedData()));
+        disconnect(clientSocket, SIGNAL(disconnected()), this, SLOT(slotDisconnected()));
+    }
 }
 
 void Endpoint::updateSocket(QTcpSocket* newSocket) {

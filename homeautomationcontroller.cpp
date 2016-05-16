@@ -5,7 +5,7 @@
 #include <datareceiver.h>
 #include <datatransmitter.h>
 #include <messagetype.h>
-
+#include <persistanceservice.h>
 #define tempPassword "fhkiel"
 
 
@@ -16,7 +16,7 @@ HomeAutomationController::HomeAutomationController(QObject *parent):
 {
     //this->hacUuid = new Uuid();
     this->pwd = tempPassword;
-    this->tcpServer = new TcpServer("localhost", 3000);
+    this->tcpServer = new TcpServer("127.0.0.1", 3000);
     this->dataReceiver = new DataReceiver();
     this->dataTransmitter = new DataTransmitter();
     connect(tcpServer, SIGNAL(signalClientConnected(QTcpSocket*)), this, SLOT(slotClientConnected(QTcpSocket*)));
@@ -28,11 +28,23 @@ HomeAutomationController::HomeAutomationController(QObject *parent):
     connect(dataReceiver, SIGNAL(signalReceivedEndpointIdent(QTcpSocket*,QString,QString,QString)), this,
             SLOT(slotProcessMessageNewEndpoint(QTcpSocket*,QString,QString,QString)));
     connect(dataReceiver, SIGNAL(signalReceivedUiIdent(QTcpSocket*,QString, QString, QString)),
-            this, SLOT( slotProcessMessageNewUi(QTcpSocket*,QString,QString, QString)));
-    //create settings object for persistant data storage
+            this, SLOT( slotProcessMessageNewUi(QTcpSocket*,QString,QString, QString)));    
+    //create se5ttings object for persistant data storage
     this->settings.beginGroup("MainControler");
     this->settings.setValue("test", 21);
     this->settings.endGroup();
+    //try sqlite connection
+    PersistanceService* ps = new PersistanceService();
+
+    Endpoint* newEndpoint = new Endpoint(NULL, "endpunkt ein", "fusecase", "FF:FF:FF:FF");
+    ps->addEndpoint(newEndpoint);
+
+    qDebug()<<ps->getEndpointNames();
+
+
+
+
+
 }
 
 HomeAutomationController::~HomeAutomationController() {
@@ -43,6 +55,30 @@ HomeAutomationController::~HomeAutomationController() {
     delete(tcpServer);
 }
 
+void HomeAutomationController::slotResetServer() {
+    cout<<"Disconnecting all endpoints and resetting stored server data\n";
+    //clear permanently stored data (ini or Sqlite)
+    clientsPendingIdentification.clear();
+    endpointsPendingConfirmation.clear();
+    this->mapMacToEndpoint.clear();
+    foreach(Endpoint* endpoint, this->endpoints) {
+        delete endpoint;
+    }
+    endpoints.clear();
+}
+
+void HomeAutomationController::slotDeleteEndpoint(QString MAC) {
+    cout<<"Deleting endpoint with MAC "<<MAC.toStdString()<<" was requested:";
+    if (this->mapMacToEndpoint.contains(MAC)) {
+        //Endpoint exists --> get Pointer at it
+        Endpoint* endpoint = this->mapMacToEndpoint.value(MAC);
+        this->endpoints.removeOne(endpoint);
+        this->mapMacToEndpoint.remove(MAC);
+        cout<<" done.\n";
+    }else {
+        cout<<"failed. Adress unknown.\n";
+    }
+}
 
 void HomeAutomationController::slotClientConnected(QTcpSocket* client) {
     this->clientsPendingIdentification.append(client);
@@ -117,6 +153,7 @@ void HomeAutomationController::addUiConnection(QTcpSocket* socket, QString alias
     //connect signals
     connect(newUiConnection, SIGNAL(signalReceivedUiEndpointStateRequest(QString,bool)),
             this, SLOT(slotForwardStateChangeRequest(QString,bool)));
+    connect(newUiConnection, SIGNAL(signalResetServer()), this, SLOT(slotResetServer()));
 }
 
 void HomeAutomationController::addEndpoint(QTcpSocket* socket, QString alias, QString type, QString MAC) {
@@ -129,7 +166,7 @@ void HomeAutomationController::addEndpoint(QTcpSocket* socket, QString alias, QS
 
 void HomeAutomationController::slotUpdateUis() {
     QByteArray message, payload="";
-    if(this->endpoints.length() > 0) {
+    //if(this->endpoints.length() > 0) {
         foreach(Endpoint* endpoint, this->endpoints ) {
             if(payload !="") {
                 payload.append(PDU_DELIMITER);
@@ -146,13 +183,13 @@ void HomeAutomationController::slotUpdateUis() {
             bool connected = endpoint->isConnected();
             payload.append(connected ? "1": "0");
         }
-        if(payload != "") {
+        //if(payload != "") {
             message = dataTransmitter->prepareMessage(MESSAGETYPE_ENDPOINTS_STATES_LIST, payload);
             foreach(UiConnection* uiConnection, this->uiConnections) {
                 uiConnection->sendMessage(message);
             }
-        }
-    }
+        //}
+    //}
 }
 
 void HomeAutomationController::slotForwardStateChangeRequest(QString MAC, bool state) {

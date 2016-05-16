@@ -20,6 +20,7 @@ private slots:
     void slotReceivedUiEndpointStateRequest(QString MAC, bool state);
 signals:
     void signalReceivedUiEndpointStateRequest(QString MAC, bool state);
+    void signalResetServer();
 private:    
     QTcpSocket* clientSocket;
     DataReceiver* dataReceiver;

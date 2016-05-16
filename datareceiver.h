@@ -27,6 +27,8 @@ signals:
     void signalReceivedUiEndpointStateRequest(QString MAC, bool state);
     void signalReceivedServerEndpointStateRequest(QString MAC, bool state);
     void signalReceivedUiIdent(QTcpSocket* socket, QString alias, QString pass, QString MAC);
+    void signalDeleteEndpoint();
+    void signalResetServer();
     //...
 private:
     int processProtocollHeader(QTcpSocket* socket, QByteArray data);

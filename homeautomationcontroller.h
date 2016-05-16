@@ -14,7 +14,7 @@ class HomeAutomationController: public QObject
     Q_OBJECT
 public:
     HomeAutomationController(QObject* parent=0);
-    ~HomeAutomationController();
+    ~HomeAutomationController();    
 private slots:
     void slotClientConnected(QTcpSocket* clientSocket);      
     void slotUpdateUis();
@@ -22,7 +22,8 @@ private slots:
     void slotProcessMessageNewEndpoint(QTcpSocket* socket, QString alias, QString type, QString MAC);
     //forwarding of a state change Request to endpoints (called by UiConnection)
     void slotForwardStateChangeRequest(QString MAC, bool state);
-
+    void slotResetServer();
+    void slotDeleteEndpoint(QString MAC);
 private:
     void addUiConnection(QTcpSocket* socket, QString alias);
     void addEndpoint(QTcpSocket* socket, QString alias, QString type, QString MAC);

@@ -152,6 +152,15 @@ void DataReceiver::processMessage(QTcpSocket* socket, MessageType type, QByteArr
         MAC     =   payloadParts.at(2);
         emit signalReceivedUiIdent(socket, alias, pass, MAC);
     break;
+    case MESSAGETYPE_UI_DELETE_ENTDPOINT:
+        qDebug()<<__FUNCTION__<<"Received delete-endpoint message";
+        emit signalDeleteEndpoint();
+        break;
+    case MESSAGETYPE_RESET_SERVER:
+        emit signalResetServer();
+        qDebug()<<__FUNCTION__<<"Received server-reset message";
+        break;
+
     default:
         qDebug()<<__FUNCTION__<<"Unrecognized MessageType";
     }

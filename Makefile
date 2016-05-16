@@ -181,6 +181,7 @@ Makefile: HomeAutomationServer.pro "E:\Program Files (x86)\Qt\5.6\msvc2015\mkspe
 		HomeAutomationServer.pro \
 		"E:\Program Files (x86)\Qt\5.6\msvc2015\lib\Qt5Gui.prl" \
 		"E:\Program Files (x86)\Qt\5.6\msvc2015\lib\Qt5Network.prl" \
+		"E:\Program Files (x86)\Qt\5.6\msvc2015\lib\Qt5Sql.prl" \
 		"E:\Program Files (x86)\Qt\5.6\msvc2015\lib\Qt5Core.prl"
 	$(QMAKE) -spec win32-msvc2015 "CONFIG+=debug" -o Makefile HomeAutomationServer.pro
 "E:\Program Files (x86)\Qt\5.6\msvc2015\mkspecs\features\spec_pre.prf":
@@ -291,6 +292,7 @@ Makefile: HomeAutomationServer.pro "E:\Program Files (x86)\Qt\5.6\msvc2015\mkspe
 HomeAutomationServer.pro:
 "E:\Program Files (x86)\Qt\5.6\msvc2015\lib\Qt5Gui.prl":
 "E:\Program Files (x86)\Qt\5.6\msvc2015\lib\Qt5Network.prl":
+"E:\Program Files (x86)\Qt\5.6\msvc2015\lib\Qt5Sql.prl":
 "E:\Program Files (x86)\Qt\5.6\msvc2015\lib\Qt5Core.prl":
 qmake: FORCE
 	@$(QMAKE) -spec win32-msvc2015 "CONFIG+=debug" -o Makefile HomeAutomationServer.pro

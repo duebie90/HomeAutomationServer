@@ -13,6 +13,7 @@ class Endpoint: public QObject
     Q_OBJECT
 public:
     Endpoint(QTcpSocket* socket, QString alias, QString type, QString MAC="", QObject* parent=0);
+    ~Endpoint();
     void updateSocket(QTcpSocket* newSocket);
     bool isConnected();
     void setConnected(bool connected);
