@@ -2,7 +2,6 @@
 #define DATARECEIVER_H
 
 #include <QObject>
-//#include <endpoint.h>
 #include <messagetype.h>
 #include <QtNetwork>
 

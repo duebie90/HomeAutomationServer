@@ -5,7 +5,10 @@
 #include <datareceiver.h>
 #include <datatransmitter.h>
 #include <messagetype.h>
-#include <persistanceservice.h>
+#include <PersistanceService.h>
+#include <SchedulingService.h>
+
+
 #define tempPassword "fhkiel"
 
 
@@ -33,18 +36,8 @@ HomeAutomationController::HomeAutomationController(QObject *parent):
     this->settings.beginGroup("MainControler");
     this->settings.setValue("test", 21);
     this->settings.endGroup();
-    //try sqlite connection
-    PersistanceService* ps = new PersistanceService();
-
-    Endpoint* newEndpoint = new Endpoint(NULL, "endpunkt ein", "fusecase", "FF:FF:FF:FF");
-    ps->addEndpoint(newEndpoint);
-
-    qDebug()<<ps->getEndpointNames();
-
-
-
-
-
+    ps = new PersistanceService();
+    ss = new SchedulingService();
 }
 
 HomeAutomationController::~HomeAutomationController() {
@@ -53,6 +46,7 @@ HomeAutomationController::~HomeAutomationController() {
     endpoints.clear();
     uiConnections.clear();
     delete(tcpServer);
+    delete(ps);
 }
 
 void HomeAutomationController::slotResetServer() {
@@ -162,6 +156,7 @@ void HomeAutomationController::addEndpoint(QTcpSocket* socket, QString alias, QS
     disconnect(socket, SIGNAL(readyRead()), dataReceiver, SLOT(slotReceivedData()));
     this->clientsPendingIdentification.removeOne(socket);
     this->mapMacToEndpoint.insert(MAC, newEndpoint);
+    ss->updateSchedule(this->endpoints);
 }
 
 void HomeAutomationController::slotUpdateUis() {

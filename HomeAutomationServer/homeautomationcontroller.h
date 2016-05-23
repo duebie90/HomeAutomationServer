@@ -7,6 +7,8 @@
 #include <QtNetwork>
 #include <tcpserver.h>
 #include <datareceiver.h>
+#include <PersistanceService.h>
+#include <SchedulingService.h>
 
 
 class HomeAutomationController: public QObject
@@ -48,6 +50,12 @@ private:
     QString pwd;
     QTimer* uiUpdateTimer;
     QSettings settings;
+
+    //Services
+    //ToDo create Services Handler
+    PersistanceService* ps;
+    SchedulingService*  ss;
+
 };
 
 #endif // HOMEAUTOMATIONCONTROLLER_H

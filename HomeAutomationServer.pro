@@ -1,35 +1,20 @@
-QT += core network sql
-#QT -= gui
+TEMPLATE = subdirs
 
-TARGET = HomeAutomationServer
-CONFIG += console
-CONFIG -= app_bundle
+SUBDIRS +=  HomeAutomation-Network \
+            HomeAutomation-Devices \
+            HomeAutomation-Services \
+            HomeAutomationServer
 
-#TEMPLATE = app
+HomeAutomation-Services.subdir = HomeAutomation-Services
+HomeAutomationServer           = HomeAutomationServer
 
-SOURCES += main.cpp \
-    endpoint.cpp \
-    uiconnection.cpp \
-    tcpserver.cpp \
-    homeautomationcontroller.cpp \
-    mainapplication.cpp \
-    inputcontroller.cpp \
-    datareceiver.cpp \
-    datatransmitter.cpp \
-    persistanceservice.cpp
+CONFIG += ordered
 
-HEADERS += \
-    endpoint.h \
-    uiconnection.h \
-    tcpserver.h \
-    homeautomationcontroller.h \
-    mainapplication.h \
-    inputcontroller.h \
-    datareceiver.h \
-    messagetype.h \
-    datatransmitter.h \
-    persistanceservice.h
+HomeAutomationServer.depends += HomeAutomation-Network \
+                                HomeAutomation-Devices \
+                                HomeAutomation-Services
 
-RC_FILE =  app.rc
-
+PRE_TARGETDEPS += HomeAutomation-Network/ HomeAutomation-Network \
+                  HomeAutomation-Devices/ HomeAutomation-Devices \
+                  HomeAutomation-Services/ HomeAutomation-Devices
 

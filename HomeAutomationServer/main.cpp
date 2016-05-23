@@ -2,6 +2,7 @@
 #include <iostream>
 #include <mainapplication.h>
 #include <inputcontroller.h>
+#include <QTimer>
 
 using namespace std;
 

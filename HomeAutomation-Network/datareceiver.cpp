@@ -1,7 +1,7 @@
 #include "datareceiver.h"
 
 #include <messagetype.h>
-//#include <endpoint.h>
+
 
 DataReceiver::DataReceiver(QObject* parent):
     QObject(parent)

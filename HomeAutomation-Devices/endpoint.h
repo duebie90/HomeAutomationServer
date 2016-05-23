@@ -4,8 +4,12 @@
 #include <QObject>
 #include <QtNetwork>
 #include <iostream>
+#include <QTime>
+#include <QDate>
 #include <datareceiver.h>
 #include <datatransmitter.h>
+#include <ScheduleEvent.h>
+
 
 using namespace std;
 class Endpoint: public QObject
@@ -24,16 +28,20 @@ public:
     bool getState();
     void requestState(bool state);
     void sendMessage(MessageType type, QByteArray message);
+    QList<ScheduleEvent*> getScheduledEvents();
     enum EndpointType {
         switchbox,
         temperatureSensor,
         lightSwitch
     };
 
+public slots:
+    void slotPerformEvent(ScheduleEvent* event);
 private slots:    
     void slotDisconnected();
     void slotReceivedState(QString MAC, bool state);    
     void slotStateRequested(bool state);
+
 private:
     void receivedData();
     QString alias;
@@ -44,6 +52,7 @@ private:
     DataTransmitter* dataTransmitter;
     bool connected;
     bool state;
+    QList<ScheduleEvent*> schedulesEvents;
 };
 
 #endif // ENDPOINT_H

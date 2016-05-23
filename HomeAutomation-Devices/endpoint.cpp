@@ -17,6 +17,11 @@ Endpoint::Endpoint(QTcpSocket* socket, QString alias, QString type, QString MAC,
 
     connect(dataReceiver, SIGNAL(signalReceivedEndpointState(QString,bool)), this, SLOT(slotReceivedState(QString,bool)));
     this->connected = true;
+
+    //create Test Event
+    ScheduleEvent* testEvent = new ScheduleEvent(QTime::currentTime().addSecs(30), QDate::currentDate(), ScheduleEvent::REPETITION_TYPE_NONE );
+    this->schedulesEvents.append(testEvent);
+
 }
 
 Endpoint::~Endpoint() {
@@ -42,8 +47,33 @@ void Endpoint::slotStateRequested(bool state) {
 
 }
 
+void Endpoint::slotPerformEvent(ScheduleEvent *event)
+{
+    qDebug()<<__FUNCTION__<<" Alias: "<<getAlias()<<" EventType: "<<event->getType();
+    ScheduleEvent::ScheduleEventType type = event->getType();
+    if (type == ScheduleEvent::EVENT_ON) {
+        setState(true);
+        event->setPerformed();
+    } else if(type == ScheduleEvent::EVENT_OFF) {
+        setState(false);
+        event->setPerformed();
+    }
+    //ToDo: implement more possible state changes
+    //e.g. analog etc
+
+    //If the event has no repetition, and was performed, dequeue
+    if (!event->isPending()) {
+        this->schedulesEvents.removeOne(event);
+    }
+}
+
 void Endpoint::sendMessage(MessageType type, QByteArray message){
     this->dataTransmitter->sendMessage(type, message);
+}
+
+QList<ScheduleEvent*> Endpoint::getScheduledEvents()
+{
+    return this->schedulesEvents;
 }
 
 void Endpoint::slotDisconnected() {
