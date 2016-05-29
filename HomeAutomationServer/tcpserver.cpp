@@ -6,6 +6,7 @@
 //#include <QNetworkSession>
 //#include <QNetworkConfigurationManager>
 //#include <QTcpSocket>
+
 #include <iostream>
 using namespace std;
 
@@ -27,11 +28,31 @@ TcpServer::TcpServer(QString address, int port, QObject *parent):
         //otherwise start server directly
         slotNetworkSessionOpened();
     }
+    dataReceiver = new DataReceiver();
+    dataTransmitter = new DataTransmitter();
+
+    connect(dataReceiver, SIGNAL(signalReceivedEndpointIdent(QTcpSocket*,QString,QString,QString)), this,
+            SIGNAL(signalReceivedEndpointIdent(QTcpSocket*,QString,QString,QString)));
+    connect(dataReceiver, SIGNAL(signalReceivedUiIdent(QTcpSocket*,QString, QString, QString)),
+            this, SIGNAL(signalReceivedUiIdent(QTcpSocket*,QString, QString, QString)));
+
 }
 
 
 TcpServer::~TcpServer() {
     clientSockets.clear();
+    clientsPendingIdentification.clear();
+}
+
+void TcpServer::resetClientsPendingIdentification()
+{
+    this->clientsPendingIdentification.clear();
+}
+
+void TcpServer::clientIdentified(QTcpSocket *client)
+{
+    disconnect(client, SIGNAL(readyRead()), dataReceiver, SLOT(slotReceivedData()));
+    this->clientsPendingIdentification.removeOne(client);
 }
 
 void TcpServer::slotNetworkSessionOpened() {
@@ -50,16 +71,27 @@ void TcpServer::slotNetworkSessionOpened() {
 
 void TcpServer::slotClientConnected() {
     QTcpSocket *clientSocket  = tcpServer->nextPendingConnection();
-    clientSockets.append(clientSocket);
 
-    emit signalClientConnected(clientSocket);
     //connect(clientSocket, SIGNAL(readyRead()), this, SLOT(slotReceivedData()));
     QHostAddress remoteAddress = clientSocket->peerAddress();
     cout<<"A Client with IP "<<remoteAddress.toString().toStdString()<<" connected.\n";
+
+    //we don't now how this is yet
+    this->clientsPendingIdentification.append(clientSocket);
+    //so we wait for him to send an identification message
+    connect(clientSocket, SIGNAL(readyRead()), dataReceiver, SLOT(slotReceivedData()));
+    //but we let him now who we are
+    QByteArray outData;
+    //ToDo: send smth. appropriate
+    outData.append("HaC:123456" );
+    clientSocket->write(outData);
+
 }
 
 void TcpServer::slotAcceptError() {
     qDebug()<<"Error accepting client";
 }
+
+
 
 

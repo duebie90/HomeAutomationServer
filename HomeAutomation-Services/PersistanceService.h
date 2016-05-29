@@ -11,8 +11,9 @@ class PersistanceService : public QObject
 public:
     explicit PersistanceService(QObject *parent = 0);
     ~PersistanceService();
-    QList<QString> getEndpointNames();
     bool addEndpoint(Endpoint* endpoint);
+    QList<QString> getEndpointNames();
+    QList<Endpoint*> getEndpoints();
 signals:
 
 public slots:
@@ -26,6 +27,7 @@ private:
     QSqlDatabase schedulesDb;
     bool databaseReady;
     QTimer* retryOpeningDatabaseTimer;
+    int retryOpenDatabaseCounter;
 
 };
 

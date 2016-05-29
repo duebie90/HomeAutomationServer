@@ -36,10 +36,13 @@ public:
     };
 
 public slots:
+    //called by SchedulingService
     void slotPerformEvent(ScheduleEvent* event);
 private slots:    
     void slotDisconnected();
+    //from hardware endpoint
     void slotReceivedState(QString MAC, bool state);    
+    //from ui-controller
     void slotStateRequested(bool state);
 
 private:

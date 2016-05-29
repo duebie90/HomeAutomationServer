@@ -19,29 +19,42 @@ HomeAutomationController::HomeAutomationController(QObject *parent):
 {
     //this->hacUuid = new Uuid();
     this->pwd = tempPassword;
-    this->tcpServer = new TcpServer("127.0.0.1", 3000);
-    this->dataReceiver = new DataReceiver();
+    //this->tcpServer = new TcpServer("127.0.0.1", 3000);
+    this->tcpServer = new TcpServer("localhost", 3000);
+    //this->dataReceiver = new DataReceiver();
     this->dataTransmitter = new DataTransmitter();
-    connect(tcpServer, SIGNAL(signalClientConnected(QTcpSocket*)), this, SLOT(slotClientConnected(QTcpSocket*)));
+
     uiUpdateTimer = new QTimer();
     uiUpdateTimer->setInterval(500);
     uiUpdateTimer->start();
     connect(uiUpdateTimer, SIGNAL(timeout()), this, SLOT(slotUpdateUis()));
 
-    connect(dataReceiver, SIGNAL(signalReceivedEndpointIdent(QTcpSocket*,QString,QString,QString)), this,
+    connect(tcpServer, SIGNAL(signalReceivedEndpointIdent(QTcpSocket*,QString,QString,QString)), this,
             SLOT(slotProcessMessageNewEndpoint(QTcpSocket*,QString,QString,QString)));
-    connect(dataReceiver, SIGNAL(signalReceivedUiIdent(QTcpSocket*,QString, QString, QString)),
+    connect(tcpServer, SIGNAL(signalReceivedUiIdent(QTcpSocket*,QString, QString, QString)),
             this, SLOT( slotProcessMessageNewUi(QTcpSocket*,QString,QString, QString)));    
-    //create se5ttings object for persistant data storage
-    this->settings.beginGroup("MainControler");
-    this->settings.setValue("test", 21);
-    this->settings.endGroup();
+
     ps = new PersistanceService();
     ss = new SchedulingService();
+
+
+    //Recover endpoint information from database
+    QList<Endpoint*> recoveredEndpoints = ps->getEndpoints();
+    if (recoveredEndpoints.length() > 0) {
+        cout<<"Recovered "<<recoveredEndpoints.length()<<" endpoint-information from database\n";
+        this->endpoints.append(recoveredEndpoints);
+        foreach(Endpoint* endpoint, recoveredEndpoints) {
+            this->mapMacToEndpoint.insert(endpoint->getMAC(), endpoint);
+        }
+    }
+
+
+    //ToDo recover also UiConnections from database
+
+
 }
 
 HomeAutomationController::~HomeAutomationController() {
-    clientsPendingIdentification.clear();
     endpointsPendingConfirmation.clear();
     endpoints.clear();
     uiConnections.clear();
@@ -52,7 +65,7 @@ HomeAutomationController::~HomeAutomationController() {
 void HomeAutomationController::slotResetServer() {
     cout<<"Disconnecting all endpoints and resetting stored server data\n";
     //clear permanently stored data (ini or Sqlite)
-    clientsPendingIdentification.clear();
+    tcpServer->resetClientsPendingIdentification();
     endpointsPendingConfirmation.clear();
     this->mapMacToEndpoint.clear();
     foreach(Endpoint* endpoint, this->endpoints) {
@@ -74,21 +87,8 @@ void HomeAutomationController::slotDeleteEndpoint(QString MAC) {
     }
 }
 
-void HomeAutomationController::slotClientConnected(QTcpSocket* client) {
-    this->clientsPendingIdentification.append(client);
-    connect(client, SIGNAL(readyRead()), dataReceiver, SLOT(slotReceivedData()));
-    QByteArray outData;
-    outData.append("HaC:123456" );
-    client->write(outData);
-    this->settings.beginGroup("MainControler");
-    int test = this->settings.value("test").toInt();
-    this->settings.endGroup();
-    cout<<"SettingsValue test="<<QString::number(test).toStdString()<<"\n";
-}
-
 void HomeAutomationController::slotProcessMessageNewEndpoint(QTcpSocket* socket, QString alias, QString type, QString MAC) {
-    cout<<"HaC: Endpoint recognized\n";
-
+    cout<<"Endpoint identification received\n";
     if (alias != "" && type!="" && MAC != "") {
         //message seems to be valid
         //so check if that Endpoint is already known
@@ -100,14 +100,14 @@ void HomeAutomationController::slotProcessMessageNewEndpoint(QTcpSocket* socket,
             reconnectedEndpoint = this->mapMacToEndpoint.value(MAC);
             if (reconnectedEndpoint->getAlias() == alias) {
                 reconnectedEndpoint->updateSocket(socket);
-                disconnect(socket, SIGNAL(readyRead()), dataReceiver, SLOT(slotReceivedData()));
                 //dequeue unIdentified socket
-                this->clientsPendingIdentification.removeOne(socket);
+                tcpServer->clientIdentified(socket);
             } else {
                 cout<<"But alias information is different. It is therefore declined";
             }
         } else {
             addEndpoint(socket, alias, type, MAC);
+            tcpServer->clientIdentified(socket);
         }
         //return true;
     } else {
@@ -141,9 +141,8 @@ void HomeAutomationController::addUiConnection(QTcpSocket* socket, QString alias
 
     UiConnection* newUiConnection = new UiConnection(socket, alias);
     uiConnections.append(newUiConnection);
-    disconnect(socket, SIGNAL(readyRead()), dataReceiver, SLOT(slotReceivedData()));
     //dequeue unIdentified socket
-    this->clientsPendingIdentification.removeOne(socket);
+    tcpServer->clientIdentified(socket);
     //connect signals
     connect(newUiConnection, SIGNAL(signalReceivedUiEndpointStateRequest(QString,bool)),
             this, SLOT(slotForwardStateChangeRequest(QString,bool)));
@@ -153,10 +152,9 @@ void HomeAutomationController::addUiConnection(QTcpSocket* socket, QString alias
 void HomeAutomationController::addEndpoint(QTcpSocket* socket, QString alias, QString type, QString MAC) {
     Endpoint* newEndpoint = new Endpoint(socket, alias, type, MAC);
     this->endpoints.append(newEndpoint);
-    disconnect(socket, SIGNAL(readyRead()), dataReceiver, SLOT(slotReceivedData()));
-    this->clientsPendingIdentification.removeOne(socket);
     this->mapMacToEndpoint.insert(MAC, newEndpoint);
     ss->updateSchedule(this->endpoints);
+    ps->addEndpoint(newEndpoint);
 }
 
 void HomeAutomationController::slotUpdateUis() {

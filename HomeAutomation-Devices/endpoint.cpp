@@ -11,9 +11,10 @@ Endpoint::Endpoint(QTcpSocket* socket, QString alias, QString type, QString MAC,
     this->state = false;
     this->dataReceiver = new DataReceiver();
     this->dataTransmitter = new DataTransmitter(socket);
-
-    connect(clientSocket, SIGNAL(readyRead()), dataReceiver, SLOT(slotReceivedData()));
-    connect(clientSocket, SIGNAL(disconnected()), this, SLOT(slotDisconnected()));
+    if(clientSocket != NULL) {
+        connect(clientSocket, SIGNAL(readyRead()), dataReceiver, SLOT(slotReceivedData()));
+        connect(clientSocket, SIGNAL(disconnected()), this, SLOT(slotDisconnected()));
+    }
 
     connect(dataReceiver, SIGNAL(signalReceivedEndpointState(QString,bool)), this, SLOT(slotReceivedState(QString,bool)));
     this->connected = true;
@@ -52,10 +53,10 @@ void Endpoint::slotPerformEvent(ScheduleEvent *event)
     qDebug()<<__FUNCTION__<<" Alias: "<<getAlias()<<" EventType: "<<event->getType();
     ScheduleEvent::ScheduleEventType type = event->getType();
     if (type == ScheduleEvent::EVENT_ON) {
-        setState(true);
+        requestState(true);
         event->setPerformed();
     } else if(type == ScheduleEvent::EVENT_OFF) {
-        setState(false);
+        requestState(false);
         event->setPerformed();
     }
     //ToDo: implement more possible state changes

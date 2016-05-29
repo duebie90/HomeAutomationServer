@@ -18,7 +18,6 @@ public:
     HomeAutomationController(QObject* parent=0);
     ~HomeAutomationController();    
 private slots:
-    void slotClientConnected(QTcpSocket* clientSocket);      
     void slotUpdateUis();
     void slotProcessMessageNewUi(QTcpSocket* socket, QString alias, QString pass, QString MAC);
     void slotProcessMessageNewEndpoint(QTcpSocket* socket, QString alias, QString type, QString MAC);
@@ -33,9 +32,6 @@ private:
     DataReceiver* dataReceiver;
     DataTransmitter* dataTransmitter;
     TcpServer* tcpServer;
-    //Recently connected clients:
-    //We wait for them to send their identification before they are visualized
-    QList<QTcpSocket*> clientsPendingIdentification;
     //Clients which are identified as Endpoints
     //have to be confirmed by user (via UI)
     QList<QTcpSocket*> endpointsPendingConfirmation;

@@ -4,7 +4,8 @@
 #include <QDir>
 PersistanceService::PersistanceService(QObject *parent) :
     QObject(parent),
-    databaseReady(false)
+    databaseReady(false),
+    retryOpenDatabaseCounter(0)
 {
     this->retryOpeningDatabaseTimer = new QTimer();
     connect(retryOpeningDatabaseTimer, SIGNAL(timeout()), this,
@@ -14,7 +15,7 @@ PersistanceService::PersistanceService(QObject *parent) :
 }
 PersistanceService::~PersistanceService()
 {
-   this->schedulesDb.close();
+    this->schedulesDb.close();
 }
 
 QList<QString> PersistanceService::getEndpointNames() {
@@ -23,7 +24,6 @@ QList<QString> PersistanceService::getEndpointNames() {
         cout<<"Error: database not ready. Settings will be lost after restart or power loss.\n";
         return endpointNames;
     }
-
     QSqlQuery query;
     //getEndpointsQuery.prepare("SELECT name FROM endpoints");
     query.prepare("select * from endpoints");
@@ -64,14 +64,42 @@ bool PersistanceService::addEndpoint(Endpoint *endpoint) {
     return true;
 }
 
+QList<Endpoint *> PersistanceService::getEndpoints()
+{
+    QList<Endpoint*> endpoints;
+    QSqlQuery query;
+    if (!databaseReady) {
+        cout<<"Error: database not ready. Settings will be lost after restart or power loss.\n";
+        return endpoints;
+    }
+    query.prepare("SELECT id, name, macAdress, endpointType FROM endpoints");
+    if(!query.exec() ) {
+        qDebug()<<"Error while getting endpoint information from database.";
+        qDebug()<<"Last DB Error: "<<query.lastError();
+        return endpoints;
+    }
+    int nameIndex = query.record().indexOf("name");
+    int macIndex = query.record().indexOf("macAdress");
+    int typeIndex = query.record().indexOf("endpointType");
+    while (query.next()) {
+        QString alias = query.value(nameIndex).toString();
+        QString type = query.value(typeIndex).toString();
+        QString macAddress = query.value(macIndex).toString();
+        Endpoint * newEndpoint = new Endpoint(NULL, alias, type, macAddress);
+        newEndpoint->setConnected(false);
+        endpoints.append(newEndpoint);
+    }
+    return endpoints;
+}
+
 void PersistanceService::slotOpenDatabase()
 {
     bool openedDatabase = false;
     QFile dbFile;
-    dbFile.setFileName("schedulesDb.sqlite");
+    dbFile.setFileName(QCoreApplication::applicationDirPath() +"/schedulesDb.sqlite");
     bool createNewDb = !dbFile.exists();
-    this->schedulesDb = QSqlDatabase::addDatabase("QSQLITE");
-    this->schedulesDb.setDatabaseName("schedulesDb.sqlite");
+    this->schedulesDb = QSqlDatabase::addDatabase("QSQLITE");    
+    this->schedulesDb.setDatabaseName(QCoreApplication::applicationDirPath() +"/schedulesDb.sqlite");
     if (this->schedulesDb.open()) {
         qDebug()<<"PersistanceService: successfully opened schedulesDb.sqlite";
         openedDatabase = true;
@@ -90,16 +118,17 @@ void PersistanceService::slotOpenDatabase()
                 cout<<"Warning database could not be created. Please check write access rights.";
             }
         } else {
-             databaseReady = true;
+            databaseReady = true;
         }
     } else {
         databaseReady = false;
     }
-    if (!databaseReady) {
+    if (!databaseReady && retryOpenDatabaseCounter != 100) {
         //schedule the next attempt
         this->retryOpeningDatabaseTimer->setInterval(2000);
         this->retryOpeningDatabaseTimer->setSingleShot(true);
         this->retryOpeningDatabaseTimer->start();
+        this->retryOpenDatabaseCounter++;
     }
 }
 
@@ -154,7 +183,7 @@ int PersistanceService::getEndpointCount()
         qDebug()<<"Last DB Error: "<<query.lastError();
         return 0;
     }
-    return query.record().count()-1;
+    return query.record().count();
 }
 
 
