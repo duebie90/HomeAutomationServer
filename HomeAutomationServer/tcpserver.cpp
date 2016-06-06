@@ -20,7 +20,7 @@ TcpServer::TcpServer(QString address, int port, QObject *parent):
     QNetworkConfigurationManager manager;
     if (manager.capabilities() & QNetworkConfigurationManager::NetworkSessionRequired ) {
         //Network session seems to be necessary, so make one
-        QNetworkConfiguration config = manager.defaultConfiguration();
+        QNetworkConfiguration config = manager.defaultConfiguration();        
         session = new QNetworkSession(config);
         //notify me once the session is open
         QObject::connect(session, SIGNAL(opened()), this, SLOT(slotNetworkSessionOpened()));
@@ -71,8 +71,7 @@ void TcpServer::slotNetworkSessionOpened() {
 
 void TcpServer::slotClientConnected() {
     QTcpSocket *clientSocket  = tcpServer->nextPendingConnection();
-
-    //connect(clientSocket, SIGNAL(readyRead()), this, SLOT(slotReceivedData()));
+    //clientSocket->setSocketOption(QAbstractSocket::KeepAliveOption, 1);
     QHostAddress remoteAddress = clientSocket->peerAddress();
     cout<<"A Client with IP "<<remoteAddress.toString().toStdString()<<" connected.\n";
 

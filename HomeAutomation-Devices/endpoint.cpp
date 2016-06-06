@@ -9,6 +9,7 @@ Endpoint::Endpoint(QTcpSocket* socket, QString alias, QString type, QString MAC,
     this->type = type;
     this->MAC = MAC;
     this->state = false;
+    this->requestedState = false;
     this->dataReceiver = new DataReceiver();
     this->dataTransmitter = new DataTransmitter(socket);
     if(clientSocket != NULL) {
@@ -30,7 +31,9 @@ Endpoint::~Endpoint() {
     slotDisconnected();
     delete dataReceiver;
     delete dataTransmitter;
-    this->clientSocket->close();
+    if(clientSocket != NULL) {
+        this->clientSocket->close();
+    }
     delete clientSocket;
 }
 
@@ -93,6 +96,12 @@ void Endpoint::updateSocket(QTcpSocket* newSocket) {
     this->connected = true;
     connect(clientSocket, SIGNAL(readyRead()), dataReceiver, SLOT(slotReceivedData()));
     connect(clientSocket, SIGNAL(disconnected()), this, SLOT(slotDisconnected()));
+
+    if(requestedState != state) {
+        //a state change was requested when this endpoint was offline
+        //now try to send request again
+        requestState(requestedState);
+    }
 }
 
 bool Endpoint::isConnected() {
@@ -118,30 +127,25 @@ void Endpoint::setState(bool state) {
 bool Endpoint::getState() {
     return this->state;
 }
+
+bool Endpoint::ackIdentification()
+{
+    QByteArray payload;
+    payload.append(getMAC());
+    this->dataTransmitter->sendMessage(MESSAGETYPE_ENDPOINT_IDENT_ACK,payload);
+    return true;
+}
 void Endpoint::requestState(bool state){
+    requestedState = state;
     if (this->isConnected()) {
-        if(this->alias != "DEBUG_ENDPOINT") {
-            //if connected, send a request now
-            QByteArray payload;
-            payload.append(getMAC());
-            payload.append(PDU_DELIMITER);
-            payload.append(state ? "1": "0");
-            sendMessage(MESSAGETYPE_SERVER_ENDPOINT_STATE_REQUEST,payload );
-        }  else {
-            //This is a simplified MSP430 Endpoint
-            QByteArray message;
-            if(state)
-                message = "SWITCH_STATE=ON";
-            else
-                message = "SWITCH_STATE=OFF";
-            message.append(0x0D);
-            message.append(0x0A);
-            this->clientSocket->write(message);
-            this->state=state;
-        }
+        //if connected, send a request now
+        QByteArray payload;
+        payload.append(getMAC());
+        payload.append(PDU_DELIMITER);
+        payload.append(state ? "1": "0");
+        sendMessage(MESSAGETYPE_SERVER_ENDPOINT_STATE_REQUEST,payload );
     }else  {
         //Not connected at the moment
-        //remember to do it later
-        //ToDo: realy do it later
+        //state change request will be send once endpoint reconnected (updateSocket())
     }
 }

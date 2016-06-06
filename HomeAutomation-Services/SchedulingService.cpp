@@ -20,6 +20,8 @@ SchedulingService::SchedulingService(QObject *parent) :
 void SchedulingService::updateSchedule(QList<Endpoint *> endpoints)
 {
     this->endpoints = endpoints;
+    this->mapTimerToEndpoint.clear();
+    this->mapTimerToEvent.clear();
     this->heartBeatTimer->stop();
     slotHeartBeat();
     this->heartBeatTimer->start();

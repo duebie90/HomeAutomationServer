@@ -92,6 +92,19 @@ QList<Endpoint *> PersistanceService::getEndpoints()
     return endpoints;
 }
 
+void PersistanceService::deleteEndpointsDatabase()
+{
+    QFile dbFile;
+    dbFile.setFileName(schedulesDb.databaseName());
+    if (dbFile.exists()) {
+        schedulesDb.close();
+        if (dbFile.remove()) {
+            cout<<"Database deleted";
+            slotOpenDatabase();
+        }
+    }
+}
+
 void PersistanceService::slotOpenDatabase()
 {
     bool openedDatabase = false;
@@ -172,6 +185,7 @@ bool PersistanceService::isTablePresent(QString tableName)
 
 int PersistanceService::getEndpointCount()
 {
+    int rowCount = 0;
     if (!databaseReady) {
         cout<<"Error: database not ready. Settings will be lost after restart or power loss.\n";
         return 0;
@@ -183,7 +197,12 @@ int PersistanceService::getEndpointCount()
         qDebug()<<"Last DB Error: "<<query.lastError();
         return 0;
     }
-    return query.record().count();
+    while(query.next()) {
+        rowCount++;
+    }
+
+    return rowCount;
+
 }
 
 

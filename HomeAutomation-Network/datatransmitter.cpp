@@ -52,15 +52,18 @@ QByteArray DataTransmitter::prepareMessage(MessageType type, QByteArray payload)
     message[0] = 0x01; //add start sign
     message[1] = (char)type;
     //message.append(payloadLength);
-
-    message[2] =  (char)(payloadLength >> 8); //upper byte
+    if( (payloadLength>>8) == 0) {
+        message[2] = 0xFF;
+    } else {
+        message[2] =  (char)(payloadLength >> 8); //upper byte
+    }
     message[3] =  (char)payloadLength;        //lower byte
     message[4] = 0x02;
     message.append(payload);
     message.append(0x03);
     message.append(0x04);
-    message.append(0x02); //payload END character
-    message.append(0x03); //message END character
+    //message.append(0x02); //payload END character
+    //message.append(0x03); //message END character
     message.append(0x0D); //CR
     message.append(0x0A); //LF
     return message;

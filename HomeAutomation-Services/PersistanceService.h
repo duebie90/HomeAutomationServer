@@ -14,6 +14,7 @@ public:
     bool addEndpoint(Endpoint* endpoint);
     QList<QString> getEndpointNames();
     QList<Endpoint*> getEndpoints();
+    void deleteEndpointsDatabase();
 signals:
 
 public slots:

@@ -26,6 +26,7 @@ public:
     QString getMAC();
     void setState(bool state);
     bool getState();
+    bool ackIdentification();
     void requestState(bool state);
     void sendMessage(MessageType type, QByteArray message);
     QList<ScheduleEvent*> getScheduledEvents();
@@ -55,6 +56,7 @@ private:
     DataTransmitter* dataTransmitter;
     bool connected;
     bool state;
+    bool requestedState;
     QList<ScheduleEvent*> schedulesEvents;
 };
 

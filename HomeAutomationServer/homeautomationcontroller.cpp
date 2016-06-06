@@ -72,6 +72,8 @@ void HomeAutomationController::slotResetServer() {
         delete endpoint;
     }
     endpoints.clear();
+    ps->deleteEndpointsDatabase();
+    ss->updateSchedule(endpoints);
 }
 
 void HomeAutomationController::slotDeleteEndpoint(QString MAC) {
@@ -100,6 +102,7 @@ void HomeAutomationController::slotProcessMessageNewEndpoint(QTcpSocket* socket,
             reconnectedEndpoint = this->mapMacToEndpoint.value(MAC);
             if (reconnectedEndpoint->getAlias() == alias) {
                 reconnectedEndpoint->updateSocket(socket);
+                reconnectedEndpoint->ackIdentification();
                 //dequeue unIdentified socket
                 tcpServer->clientIdentified(socket);
             } else {
@@ -153,6 +156,7 @@ void HomeAutomationController::addEndpoint(QTcpSocket* socket, QString alias, QS
     Endpoint* newEndpoint = new Endpoint(socket, alias, type, MAC);
     this->endpoints.append(newEndpoint);
     this->mapMacToEndpoint.insert(MAC, newEndpoint);
+    newEndpoint->ackIdentification();
     ss->updateSchedule(this->endpoints);
     ps->addEndpoint(newEndpoint);
 }
