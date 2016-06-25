@@ -61,5 +61,8 @@ void SchedulingService::slotPerformEvent()
     Endpoint* concerningEndpoint = this->mapTimerToEndpoint.value(expiredTimer);
     ScheduleEvent* event    = this->mapTimerToEvent.value(expiredTimer);
     concerningEndpoint->slotPerformEvent(event);
+    this->mapTimerToEndpoint.remove(expiredTimer);
+    this->mapTimerToEvent.remove(expiredTimer);
+
 }
 

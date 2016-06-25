@@ -3,6 +3,7 @@
 #include <messagetype.h>
 #include <iostream>
 #include <QDebug>
+#include <QTcpSocket>
 
 using namespace std;
 
@@ -16,10 +17,7 @@ void DataReceiver::slotReceivedData() {
     QTcpSocket* senderSocket = (QTcpSocket*)QObject::sender();
     QByteArray data = senderSocket->readAll();
 
-    if(data.contains("DEBUG_ENDPOINT_IDENT"))
-        emit signalReceivedEndpointIdent(senderSocket, "debugEP", "testtype", "FF:FF");
-    else
-        processProtocollHeader(senderSocket, data);
+    processProtocollHeader(senderSocket, data);
 }
 
 int DataReceiver::processProtocollHeader(QTcpSocket* socket, QByteArray data) {
@@ -29,12 +27,13 @@ int DataReceiver::processProtocollHeader(QTcpSocket* socket, QByteArray data) {
     quint16 payloadLength=0;
 
     //check if StartOfHeader Code is at(0)
-    if (data.at(0) != 0x01)
+    if (data.at(0) != 0x01) {
+        cout<<"Received invalid message from "<<socket->peerAddress().toString().toStdString()<<"\n";
         return -1;
+    }
     messageType = (MessageType)data.at(1); //second Byte
     QByteArray lengthBytes= data.mid(2,2);
 
-    cout<<__FUNCTION__<<QString::number(lengthBytes.at(0)).toStdString()<<"\n";
     if(lengthBytes.at(0) != -1) {
         //0xFF stands for 0x00, 0 makes trouble in c strings
         payloadLength |= (quint8)(lengthBytes.at(0));
@@ -48,19 +47,23 @@ int DataReceiver::processProtocollHeader(QTcpSocket* socket, QByteArray data) {
     if ( messageParts.length() >= 2 ) {
         splitOfPayload = messageParts.at(1);
     } else {
+        cout<<"Received invalid message from "<<socket->peerAddress().toString().toStdString()<<"\n";
         return -2;
     }
     payload = splitOfPayload.split(0x03).at(0);
     //check payload length
     if (payload.length() != payloadLength) {
+        cout<<"Received invalid message from "<<socket->peerAddress().toString().toStdString()<<"\n";
         return -3;
     }
     //check correct termination after payload section (0x03|0x04)
     QByteArray termination = data.mid(5 + payloadLength, 2);
     if (termination.length() >= 2 )
-        if(termination.at(0) != 0x03 || termination.at(1) != 0x04 )
+        if(termination.at(0) != 0x03 || termination.at(1) != 0x04 ) {
+            cout<<"Received invalid message from "<<socket->peerAddress().toString().toStdString();
             return -4;
-
+        }
+    cout<<"Received message from "<<socket->peerAddress().toString().toStdString()<<" Type: "<<messageType<<"\n";
     processMessage(socket, messageType, payload);
     return 0;
 }

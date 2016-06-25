@@ -18,6 +18,8 @@ Endpoint::Endpoint(QTcpSocket* socket, QString alias, QString type, QString MAC,
     }
 
     connect(dataReceiver, SIGNAL(signalReceivedEndpointState(QString,bool)), this, SLOT(slotReceivedState(QString,bool)));
+    connect(dataReceiver, SIGNAL(signalReceivedEndpointIdent(QTcpSocket*,QString,QString,QString)), this,
+            SLOT(slotReceivedIdentMessage(QTcpSocket*,QString,QString,QString)));
     this->connected = true;
 
     //create Test Event
@@ -68,6 +70,16 @@ void Endpoint::slotPerformEvent(ScheduleEvent *event)
     //If the event has no repetition, and was performed, dequeue
     if (!event->isPending()) {
         this->schedulesEvents.removeOne(event);
+    }
+}
+
+void Endpoint::slotReceivedIdentMessage(QTcpSocket *socket, QString alias, QString type, QString MAC)
+{
+    Q_UNUSED(socket)
+    Q_UNUSED(alias)
+    Q_UNUSED(type)
+    if(QString::compare(MAC, this->getMAC(),Qt::CaseSensitive) == 0) {
+        ackIdentification();
     }
 }
 

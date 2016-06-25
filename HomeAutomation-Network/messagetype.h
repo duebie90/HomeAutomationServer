@@ -7,7 +7,7 @@ enum MessageType{
     MESSAGETYPE_ENDPOINT_IDENT = 0x21,      //Identification endpoint -->server
     MESSAGETYPE_ENDPOINT_IDENT_ACK,         //Identification ACK server --> endpoint
     MESSAGETYPE_ENDPOINT_STATE,             //State update endpoint --> server
-    MESSAGETYPE_ENDPOINT_SCHEDULE,          // server --> endpoint
+    MESSAGETYPE_ENDPOINT_SCHEDULE,          // ui -> server
     MESSAGETYPE_ENDPOINTS_LIST,             //
     MESSAGETYPE_ENDPOINTS_STATES_LIST,      // server --> ui
     MESSAGETYPE_ENDPOINTS_SCHEDULES_LIST,   // server -->ui

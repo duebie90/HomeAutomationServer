@@ -39,6 +39,7 @@ public:
 public slots:
     //called by SchedulingService
     void slotPerformEvent(ScheduleEvent* event);
+    void slotReceivedIdentMessage(QTcpSocket* socket, QString alias, QString type, QString MAC);
 private slots:    
     void slotDisconnected();
     //from hardware endpoint

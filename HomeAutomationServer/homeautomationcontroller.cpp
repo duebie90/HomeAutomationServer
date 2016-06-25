@@ -106,7 +106,7 @@ void HomeAutomationController::slotProcessMessageNewEndpoint(QTcpSocket* socket,
                 //dequeue unIdentified socket
                 tcpServer->clientIdentified(socket);
             } else {
-                cout<<"But alias information is different. It is therefore declined";
+                cout<<"But alias information is different. It is therefore declined\n";
             }
         } else {
             addEndpoint(socket, alias, type, MAC);
@@ -195,7 +195,7 @@ void HomeAutomationController::slotForwardStateChangeRequest(QString MAC, bool s
         cout<<"on";
     else
         cout<<"off";
-    cout<<"message to endpoint\n"<<MAC.toStdString();
+    cout<<"message to endpoint\n"<<MAC.toStdString()<<"\n";
 
     if (this->mapMacToEndpoint.contains(MAC)) {
         //Endpoint exists --> get Pointer at it

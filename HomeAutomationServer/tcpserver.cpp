@@ -61,7 +61,7 @@ void TcpServer::slotNetworkSessionOpened() {
     QObject::connect(tcpServer, SIGNAL(acceptError(QAbstractSocket::SocketError)), this, SLOT(slotAcceptError()));
 
     if ( !tcpServer->listen(QHostAddress(serverAddress), serverPort)) {
-        cout<<"Error: unable to start the tcp server";
+        cout<<"Error: unable to start the tcp server\n";
     } else {
         cout<<"Server started: listening on port "<<tcpServer->serverPort()<<"\n";
         QString address = tcpServer->serverAddress().toString();
