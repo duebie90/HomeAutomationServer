@@ -22,9 +22,7 @@ Endpoint::Endpoint(QTcpSocket* socket, QString alias, QString type, QString MAC,
             SLOT(slotReceivedIdentMessage(QTcpSocket*,QString,QString,QString)));
     this->connected = true;
 
-    //create Test Event
-    ScheduleEvent* testEvent = new ScheduleEvent(QTime::currentTime().addSecs(30), QDate::currentDate(), ScheduleEvent::REPETITION_TYPE_NONE );
-    this->schedulesEvents.append(testEvent);
+
 
 }
 
@@ -69,7 +67,7 @@ void Endpoint::slotPerformEvent(ScheduleEvent *event)
 
     //If the event has no repetition, and was performed, dequeue
     if (!event->isPending()) {
-        this->schedulesEvents.removeOne(event);
+        this->scheduleEvents.remove(event->getId());
     }
 }
 
@@ -87,9 +85,31 @@ void Endpoint::sendMessage(MessageType type, QByteArray message){
     this->dataTransmitter->sendMessage(type, message);
 }
 
-QList<ScheduleEvent*> Endpoint::getScheduledEvents()
+QMap<int, ScheduleEvent*> Endpoint::getScheduledEvents()
 {
-    return this->schedulesEvents;
+    return this->scheduleEvents;
+}
+
+void Endpoint::updateScheduleEvent(ScheduleEvent* event)
+{
+    if (this->scheduleEvents.contains(event->getId())) {
+        ScheduleEvent* oldEvent = scheduleEvents.value(event->getId());
+        //using stream operator to update all values
+        QByteArray buffer;
+        QDataStream stream(&buffer, QIODevice::ReadWrite);
+        stream<<&event;
+        stream.device()->reset();
+        stream>>oldEvent;
+    } else if(event->getId() == scheduleEvents.size()){
+        this->scheduleEvents.insert(event->getId(), event);
+    } else if(event->getId() > scheduleEvents.size()){
+        int id = scheduleEvents.size();
+        event->setId(id);
+        this->scheduleEvents.insert(id, event);
+    } else {
+        cout<<"Endpoint "<<getMAC().toStdString()<<" : Error inserting schedule event\n";
+        cout<<"Id"<<event->getId()<<" is invalid";
+    }
 }
 
 void Endpoint::slotDisconnected() {

@@ -4,6 +4,7 @@
 #include <QObject>
 #include <messagetype.h>
 #include <QtNetwork>
+#include <ScheduleEvent.h>
 
 /* Diese Klasse stellt einen Protokoll Parser dar.
  * Sie erkennt den Typ der Nachricht und überprüft die Korrekte Form aufgrund des
@@ -26,6 +27,7 @@ signals:
     void signalReceivedUiEndpointStateRequest(QString MAC, bool state);
     void signalReceivedServerEndpointStateRequest(QString MAC, bool state);
     void signalReceivedUiIdent(QTcpSocket* socket, QString alias, QString pass, QString MAC);
+    void signalReceivedEndpointSchedule(QString mac, ScheduleEvent* scheduleEvent);
     void signalDeleteEndpoint();
     void signalResetServer();
     //...

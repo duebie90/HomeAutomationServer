@@ -150,6 +150,8 @@ void HomeAutomationController::addUiConnection(QTcpSocket* socket, QString alias
     connect(newUiConnection, SIGNAL(signalReceivedUiEndpointStateRequest(QString,bool)),
             this, SLOT(slotForwardStateChangeRequest(QString,bool)));
     connect(newUiConnection, SIGNAL(signalResetServer()), this, SLOT(slotResetServer()));
+    connect(newUiConnection, SIGNAL(signalReceivedEndpointSchedule(QString,ScheduleEvent*)),
+            this, SLOT(slotForwardEndpointSchedule(QString,ScheduleEvent*)));
 }
 
 void HomeAutomationController::addEndpoint(QTcpSocket* socket, QString alias, QString type, QString MAC) {
@@ -206,4 +208,11 @@ void HomeAutomationController::slotForwardStateChangeRequest(QString MAC, bool s
     }
 }
 
+void HomeAutomationController::slotForwardEndpointSchedule(QString MAC, ScheduleEvent* event)
+{
+    Endpoint* endpoint = this->mapMacToEndpoint.value(MAC);
+    if(endpoint != NULL) {
+        endpoint->updateScheduleEvent(event);
+    }
+}
 

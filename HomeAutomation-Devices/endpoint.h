@@ -29,7 +29,9 @@ public:
     bool ackIdentification();
     void requestState(bool state);
     void sendMessage(MessageType type, QByteArray message);
-    QList<ScheduleEvent*> getScheduledEvents();
+    QMap<int, ScheduleEvent*> getScheduledEvents();
+    //is used to either update or add a new event
+    void updateScheduleEvent(ScheduleEvent* event);
     enum EndpointType {
         switchbox,
         temperatureSensor,
@@ -58,7 +60,7 @@ private:
     bool connected;
     bool state;
     bool requestedState;
-    QList<ScheduleEvent*> schedulesEvents;
+    QMap<int, ScheduleEvent*> scheduleEvents;
 };
 
 #endif // ENDPOINT_H

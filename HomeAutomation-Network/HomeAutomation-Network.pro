@@ -14,6 +14,8 @@ CONFIG += staticlib
 
 include(HomeAutomation-Network.pri)
 
+INCLUDEPATH += ../HomeAutomation-Devices
+
 unix {
     target.path = /usr/lib
     INSTALLS += target

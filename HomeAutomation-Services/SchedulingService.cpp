@@ -33,11 +33,11 @@ void SchedulingService::slotHeartBeat()
     QTime now = QTime::currentTime();
     foreach(Endpoint* endpoint, this->endpoints)
     {
-        QList<ScheduleEvent*> events = endpoint->getScheduledEvents();
+        QList<ScheduleEvent*> events = endpoint->getScheduledEvents().values();
         foreach(ScheduleEvent* event, events) {
             if(event->getDate() == QDate::currentDate()) {
                 //it's today
-                int secondsUntilEvent = now.secsTo(event->getTime());
+                int secondsUntilEvent = now.secsTo(event->getStartTime());
                 if(secondsUntilEvent <= hearBeatIntervallSeconds && secondsUntilEvent >0 ) {
                     QTimer* newTimer = new QTimer();
                     newTimer->setInterval(secondsUntilEvent*1000);

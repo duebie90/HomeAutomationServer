@@ -16,6 +16,10 @@ UiConnection::UiConnection(QTcpSocket* socket, QString alias, QObject* parent):
     //connections from data receiver
     connect(dataReceiver, SIGNAL(signalReceivedUiEndpointStateRequest(QString,bool)),
             this, SIGNAL(signalReceivedUiEndpointStateRequest(QString,bool)));
+    connect(dataReceiver, SIGNAL(signalReceivedEndpointSchedule(QString,ScheduleEvent*)),
+            this, SIGNAL(signalReceivedEndpointSchedule(QString,ScheduleEvent*)));
+
+
     connect(dataReceiver, SIGNAL(signalResetServer()), this, SIGNAL(signalResetServer()));
 }
 void UiConnection::sendMessage(QByteArray message){

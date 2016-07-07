@@ -50,11 +50,15 @@ int DataReceiver::processProtocollHeader(QTcpSocket* socket, QByteArray data) {
         cout<<"Received invalid message from "<<socket->peerAddress().toString().toStdString()<<"\n";
         return -2;
     }
-    payload = splitOfPayload.split(0x03).at(0);
-    //check payload length
-    if (payload.length() != payloadLength) {
-        cout<<"Received invalid message from "<<socket->peerAddress().toString().toStdString()<<"\n";
-        return -3;
+    if (messageType != MESSAGETYPE_ENDPOINT_SCHEDULE) {
+        payload = splitOfPayload.split(0x03).at(0);
+        //check payload length
+        if (payload.length() != payloadLength) {
+            cout<<"Received invalid message from "<<socket->peerAddress().toString().toStdString()<<"\n";
+            return -3;
+        }
+    } else {
+        payload = data.mid(5, payloadLength);
     }
     //check correct termination after payload section (0x03|0x04)
     QByteArray termination = data.mid(5 + payloadLength, 2);
@@ -171,7 +175,16 @@ void DataReceiver::processMessage(QTcpSocket* socket, MessageType type, QByteArr
         emit signalResetServer();
         qDebug()<<__FUNCTION__<<"Received server-reset message";
         break;
-
+    case MESSAGETYPE_ENDPOINT_SCHEDULE:{
+        QDataStream in(&payload, QIODevice::ReadOnly);
+        in>>MAC;
+        if (!MAC.isEmpty()) {
+            ScheduleEvent* event = new ScheduleEvent();
+            in>>event;
+            emit signalReceivedEndpointSchedule(MAC, event);
+        }
+        break;
+    }
     default:
         qDebug()<<__FUNCTION__<<"Unrecognized MessageType";
     }
