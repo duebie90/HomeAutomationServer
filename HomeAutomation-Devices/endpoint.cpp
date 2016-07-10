@@ -97,7 +97,7 @@ void Endpoint::updateScheduleEvent(ScheduleEvent* event)
         //using stream operator to update all values
         QByteArray buffer;
         QDataStream stream(&buffer, QIODevice::ReadWrite);
-        stream<<&event;
+        stream<<event;
         stream.device()->reset();
         stream>>oldEvent;
     } else if(event->getId() == scheduleEvents.size()){

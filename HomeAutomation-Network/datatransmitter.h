@@ -4,6 +4,7 @@
 #include <QObject>
 #include <messagetype.h>
 #include <QtNetwork>
+#include <iostream>
 
 class DataTransmitter: public QObject
 {

@@ -3,6 +3,7 @@
 #define ALIAS   "Test UI 1"
 #define MAC     "12:13:14:15:16:17"
 
+using namespace std;
 
 DataTransmitter::DataTransmitter(QTcpSocket* client, QObject* parent):
     QObject(parent)
@@ -23,8 +24,7 @@ int DataTransmitter::sendInfoMessage() {
         content.append(0x1F);
         content.append(MAC);
 
-        message = prepareMessage(MESSAGETYPE_UI_INFO, content);
-        this->client->write(message, message.length());
+        sendMessage(MESSAGETYPE_UI_INFO, content);
         return 0;
     } else {
         return -1;
@@ -38,6 +38,11 @@ int DataTransmitter::sendMessage(MessageType type, QByteArray payload) {
         QByteArray message;
         message = prepareMessage(type, payload);
         this->client->write(message, message.length());
+        int success = this->client->write(message, message.length());
+        if(success <= 0) {
+            cout<<"Error writing to socket. Connected to "<<this->client->peerAddress().toString().toStdString()<<" "<<this->client->peerName().toStdString()<<"\n";
+            return -1;
+        }
          return 0;
     } else {
         return -1;

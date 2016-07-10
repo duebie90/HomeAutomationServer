@@ -164,33 +164,28 @@ void HomeAutomationController::addEndpoint(QTcpSocket* socket, QString alias, QS
 }
 
 void HomeAutomationController::slotUpdateUis() {
-    QByteArray message, payload="";
-    //if(this->endpoints.length() > 0) {
-        foreach(Endpoint* endpoint, this->endpoints ) {
-            if(payload !="") {
-                payload.append(PDU_DELIMITER);
-            }
-            payload.append(endpoint->getAlias());
-            payload.append(PDU_DELIMITER);
-            payload.append(endpoint->getMAC());
-            payload.append(PDU_DELIMITER);
-            payload.append(endpoint->getType());
-            payload.append(PDU_DELIMITER);
-            bool state = endpoint->getState();
-            payload.append(state ? "1": "0");
-            payload.append(PDU_DELIMITER);
-            bool connected = endpoint->isConnected();
-            payload.append(connected ? "1": "0");
-        }
-        //if(payload != "") {
-            message = dataTransmitter->prepareMessage(MESSAGETYPE_ENDPOINTS_STATES_LIST, payload);
-            foreach(UiConnection* uiConnection, this->uiConnections) {
-                uiConnection->sendMessage(message);
-            }
-        //}
-    //}
+    foreach(UiConnection* uiConnection, this->uiConnections) {
+        uiConnection->sendUpdate(this->endpoints);
+        this->ui2Update = uiConnection;        
+        QTimer::singleShot(100, this, SLOT(slotUpdateUiSchedules()) );//send endpoint schedules to ui: one endpoint at a time
+    }
 }
 
+void HomeAutomationController::slotUpdateUiSchedules()
+{
+    static int i = 0;
+    if(this->endpoints.length() > i) {
+        Endpoint* endpoint = this->endpoints.at(i);
+        this->ui2Update->sendEndpointSchedulesUpdate(endpoint->getMAC(), endpoint->getScheduledEvents().values());
+        //recurse for next endpoint
+        i++;
+    }
+    if(this->endpoints.length() > i) {
+        QTimer::singleShot(10, this, SLOT(slotUpdateUiSchedules()) );
+    } else {
+        i=0;
+    }
+}
 void HomeAutomationController::slotForwardStateChangeRequest(QString MAC, bool state) {
     cout<<"Sending switch-";
     if(state)
