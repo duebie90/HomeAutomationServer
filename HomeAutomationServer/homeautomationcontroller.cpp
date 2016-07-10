@@ -89,6 +89,13 @@ void HomeAutomationController::slotDeleteEndpoint(QString MAC) {
     }
 }
 
+void HomeAutomationController::slotUiDisconnected()
+{
+    UiConnection* disconnectedUi = (UiConnection*)QObject::sender();
+    cout<<"Ui with IP "<<disconnectedUi->getIp().toString().toStdString()<<" disconnected\n";
+    this->uiConnections.removeOne(disconnectedUi);
+}
+
 void HomeAutomationController::slotProcessMessageNewEndpoint(QTcpSocket* socket, QString alias, QString type, QString MAC) {
     cout<<"Endpoint identification received\n";
     if (alias != "" && type!="" && MAC != "") {
@@ -152,6 +159,7 @@ void HomeAutomationController::addUiConnection(QTcpSocket* socket, QString alias
     connect(newUiConnection, SIGNAL(signalResetServer()), this, SLOT(slotResetServer()));
     connect(newUiConnection, SIGNAL(signalReceivedEndpointSchedule(QString,ScheduleEvent*)),
             this, SLOT(slotForwardEndpointSchedule(QString,ScheduleEvent*)));
+    connect(newUiConnection, SIGNAL(signalDisconnected()), this, SLOT(slotUiDisconnected()));
 }
 
 void HomeAutomationController::addEndpoint(QTcpSocket* socket, QString alias, QString type, QString MAC) {
@@ -165,27 +173,10 @@ void HomeAutomationController::addEndpoint(QTcpSocket* socket, QString alias, QS
 
 void HomeAutomationController::slotUpdateUis() {
     foreach(UiConnection* uiConnection, this->uiConnections) {
-        uiConnection->sendUpdate(this->endpoints);
-        this->ui2Update = uiConnection;        
-        QTimer::singleShot(100, this, SLOT(slotUpdateUiSchedules()) );//send endpoint schedules to ui: one endpoint at a time
+        uiConnection->sendUpdate(this->endpoints);        
     }
 }
 
-void HomeAutomationController::slotUpdateUiSchedules()
-{
-    static int i = 0;
-    if(this->endpoints.length() > i) {
-        Endpoint* endpoint = this->endpoints.at(i);
-        this->ui2Update->sendEndpointSchedulesUpdate(endpoint->getMAC(), endpoint->getScheduledEvents().values());
-        //recurse for next endpoint
-        i++;
-    }
-    if(this->endpoints.length() > i) {
-        QTimer::singleShot(10, this, SLOT(slotUpdateUiSchedules()) );
-    } else {
-        i=0;
-    }
-}
 void HomeAutomationController::slotForwardStateChangeRequest(QString MAC, bool state) {
     cout<<"Sending switch-";
     if(state)

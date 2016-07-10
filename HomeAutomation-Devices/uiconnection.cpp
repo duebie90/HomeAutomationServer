@@ -30,15 +30,29 @@ void UiConnection::sendUpdate(QList<Endpoint *> endpoints)
 {
     //send endpoint states list to ui
     sendEndpointStatesUpdate(endpoints);
-
-    //foreach(Endpoint* endpoint, endpoints ) {
-    //    sendEndpointSchedulesUpdate(endpoint->getMAC(), endpoint->getScheduledEvents().values());
-    //}
+    this->endpoints = endpoints;
+    slotPrepareEndpointSchedulesUpdate();
 }
 
 void UiConnection::slotReceivedUiEndpointStateRequest(QString MAC, bool state) {
 
 
+}
+
+void UiConnection::slotPrepareEndpointSchedulesUpdate()
+{
+    static int i = 0;
+    if(this->endpoints.length() > i) {
+        Endpoint* endpoint = this->endpoints.at(i);
+        sendEndpointSchedulesUpdate(endpoint->getMAC(), endpoint->getScheduledEvents().values());
+        //recurse for next endpoint
+        i++;
+    }
+    if(this->endpoints.length() > i) {
+        QTimer::singleShot(10, this, SLOT(slotPrepareEndpointSchedulesUpdate()) );
+    } else {
+        i=0;
+    }
 }
 
 void UiConnection::sendEndpointStatesUpdate(QList<Endpoint *> endpoints)
@@ -78,8 +92,14 @@ void UiConnection::sendEndpointSchedulesUpdate(QString mac, QList<ScheduleEvent 
     }
 }
 
+QHostAddress UiConnection::getIp()
+{
+    return this->clientSocket->peerAddress();
+}
+
 void UiConnection::slotDisconnected() {
     cout<<"Client Disconnected\n";
     this->connected = false;
+    emit signalDisconnected();
 }
 

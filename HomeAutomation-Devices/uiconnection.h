@@ -18,15 +18,17 @@ public:
     void sendMessage(QByteArray message);
     void sendUpdate(QList<Endpoint*> endpoints);
     void sendEndpointSchedulesUpdate(QString mac, QList<ScheduleEvent*> schedules);
+    QHostAddress getIp();
 private slots:  
     void slotDisconnected();
     void slotReceivedUiEndpointStateRequest(QString MAC, bool state);
+    void slotPrepareEndpointSchedulesUpdate();
 signals:
     void signalReceivedUiEndpointStateRequest(QString MAC, bool state);
     void signalReceivedEndpointSchedule(QString mac, ScheduleEvent* event);
     void signalResetServer();
+    void signalDisconnected();
 private:    
-
     void sendEndpointStatesUpdate(QList<Endpoint*> endpoints);
 
     QTcpSocket* clientSocket;
@@ -34,6 +36,7 @@ private:
     DataTransmitter* dataTransmitter;
     QString alias;
     bool connected;
+    QList<Endpoint*> endpoints;
 };
 
 #endif // UICONNECTION_H

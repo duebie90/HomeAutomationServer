@@ -19,7 +19,6 @@ public:
     ~HomeAutomationController();    
 private slots:
     void slotUpdateUis();
-    void slotUpdateUiSchedules();
     void slotProcessMessageNewUi(QTcpSocket* socket, QString alias, QString pass, QString MAC);
     void slotProcessMessageNewEndpoint(QTcpSocket* socket, QString alias, QString type, QString MAC);
     //forwarding of a state change Request to endpoints (called by UiConnection)
@@ -27,6 +26,7 @@ private slots:
     void slotForwardEndpointSchedule(QString MAC, ScheduleEvent* event);
     void slotResetServer();
     void slotDeleteEndpoint(QString MAC);
+    void slotUiDisconnected();
 private:
     void addUiConnection(QTcpSocket* socket, QString alias);
     void addEndpoint(QTcpSocket* socket, QString alias, QString type, QString MAC);
