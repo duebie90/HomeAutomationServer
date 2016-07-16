@@ -17,27 +17,70 @@ SchedulingService::SchedulingService(QObject *parent) :
 
 }
 
-void SchedulingService::updateSchedule(QList<Endpoint *> endpoints)
+void SchedulingService::setEndpoints(QList<Endpoint *> endpoints)
 {
+    //overwrite, just for the case there are new endpoints in the list
     this->endpoints = endpoints;
+    foreach(Endpoint* endpoint, endpoints) {
+        connect(endpoint, SIGNAL(signalSchedulesChanged()), this, SLOT(slotUpdateSchedules()));
+    }
+    slotUpdateSchedules();
+}
+
+void SchedulingService::slotUpdateSchedules()
+{
     this->mapTimerToEndpoint.clear();
     this->mapTimerToEvent.clear();
     this->heartBeatTimer->stop();
     slotHeartBeat();
     this->heartBeatTimer->start();
-
 }
 
 void SchedulingService::slotHeartBeat()
 {
     QTime now = QTime::currentTime();
+    QDate todaysDate = QDate::currentDate();
+    int secondsUntilEvent = -1;
     foreach(Endpoint* endpoint, this->endpoints)
     {
+        bool takingPlaceToday = false;
         QList<ScheduleEvent*> events = endpoint->getScheduledEvents().values();
         foreach(ScheduleEvent* event, events) {
-            if(event->getDate() == QDate::currentDate()) {
-                //it's today
-                int secondsUntilEvent = now.secsTo(event->getStartTime());
+            switch(event->getRepetition()) {
+            case ScheduleEvent::REPETITION_TYPE_NONE:
+                //Fallthrough intended
+            case ScheduleEvent::REPETITION_TYPE_DAYLY:
+                takingPlaceToday = true;
+                break;
+            case ScheduleEvent::REPETITION_TYPE_DAYLY_ONLY_WEEKEND:
+                //1=Monday
+                if (todaysDate.dayOfWeek() == 6 || todaysDate.dayOfWeek() == 6) {
+                    takingPlaceToday = true;
+                }
+                break;
+            case ScheduleEvent::REPETITION_TYPE_DAYLY_WORKINGDAYS: {
+                //1=Monday
+                int dayNumber = todaysDate.dayOfWeek();
+                if (todaysDate.dayOfWeek() != 6 && !todaysDate.dayOfWeek() != 6) {
+                    takingPlaceToday = true;
+                }
+                break;}
+            case ScheduleEvent::REPETITION_TYPE_WEEKLY:
+                if (event->getWeekdays().at(todaysDate.dayOfWeek()-1) == true) {
+                    takingPlaceToday = true;
+                }
+                break;
+            default:
+                qDebug()<<"Error on schedule Event: RepetitionType not recognized";
+            }
+            if (takingPlaceToday ) {
+                if(endpoint->getState() == false) {
+                    //endpoint current in OFF state
+                    secondsUntilEvent = now.secsTo(event->getStartTime());
+                } else {
+                    //endpoint current in ON state
+                    secondsUntilEvent = now.secsTo(event->getEndTime());
+                }
                 if(secondsUntilEvent <= hearBeatIntervallSeconds && secondsUntilEvent >0 ) {
                     QTimer* newTimer = new QTimer();
                     newTimer->setInterval(secondsUntilEvent*1000);

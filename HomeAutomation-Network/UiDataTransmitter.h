@@ -1,16 +1,16 @@
-#ifndef DATATRANSMITTER_H
-#define DATATRANSMITTER_H
+#ifndef UiDataTransmitter_H
+#define UiDataTransmitter_H
 
 #include <QObject>
 #include <messagetype.h>
 #include <QtNetwork>
 #include <iostream>
 
-class DataTransmitter: public QObject
+class UiDataTransmitter: public QObject
 {
     Q_OBJECT
 public:
-    DataTransmitter(QTcpSocket* client=0, QObject* parent=0);
+    UiDataTransmitter(QTcpSocket* client=0, QObject* parent=0);
     void updateSocket(QTcpSocket* socket);
     int sendInfoMessage();
     int sendMessage(MessageType type, QByteArray payload);
@@ -25,4 +25,4 @@ private:
 
 };
 
-#endif // DATATRANSMITTER_H
+#endif // UiDataTransmitter_H

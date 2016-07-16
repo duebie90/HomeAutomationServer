@@ -1,22 +1,22 @@
-#include "datatransmitter.h"
+#include "UiDataTransmitter.h"
 
 #define ALIAS   "Test UI 1"
 #define MAC     "12:13:14:15:16:17"
 
 using namespace std;
 
-DataTransmitter::DataTransmitter(QTcpSocket* client, QObject* parent):
+UiDataTransmitter::UiDataTransmitter(QTcpSocket* client, QObject* parent):
     QObject(parent)
 {
     if(client != 0)
         this->client = client;
 
 }
-void DataTransmitter::updateSocket(QTcpSocket *socket) {
+void UiDataTransmitter::updateSocket(QTcpSocket *socket) {
     this->client = socket;
 }
 
-int DataTransmitter::sendInfoMessage() {
+int UiDataTransmitter::sendInfoMessage() {
     if (this->client !=0) {
         QByteArray message;
         QByteArray content = "";
@@ -33,7 +33,7 @@ int DataTransmitter::sendInfoMessage() {
 
 
 
-int DataTransmitter::sendMessage(MessageType type, QByteArray payload) {
+int UiDataTransmitter::sendMessage(MessageType type, QByteArray payload) {
     if (this->client !=0) {
         QByteArray message;
         message = prepareMessage(type, payload);
@@ -50,7 +50,7 @@ int DataTransmitter::sendMessage(MessageType type, QByteArray payload) {
 }
 
 
-QByteArray DataTransmitter::prepareMessage(MessageType type, QByteArray payload) {
+QByteArray UiDataTransmitter::prepareMessage(MessageType type, QByteArray payload) {
     QByteArray message;
     quint16 payloadLength = (quint16)payload.length();
 

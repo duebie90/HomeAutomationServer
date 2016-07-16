@@ -11,11 +11,12 @@ class SchedulingService : public QObject
     Q_OBJECT
 public:
     explicit SchedulingService(QObject *parent = 0);
-    void updateSchedule(QList<Endpoint*> endpoints);
+    void setEndpoints(QList<Endpoint*> endpoints);
 signals:
-
+    void signalSchedulesChanged();
 public slots:
 private slots:
+    void slotUpdateSchedules();
     void slotHeartBeat();
     void slotPerformEvent();
 private:

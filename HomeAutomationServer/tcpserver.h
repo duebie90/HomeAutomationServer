@@ -4,8 +4,8 @@
 #include <QObject>
 #include <QTcpServer>
 #include <QNetworkSession>
-#include <datareceiver.h>
-#include <datatransmitter.h>
+#include <UiDataReceiver.h>
+#include <UiDataTransmitter.h>
 
 class TcpServer: public QObject
 {

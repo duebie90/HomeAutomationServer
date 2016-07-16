@@ -10,8 +10,10 @@ Endpoint::Endpoint(QTcpSocket* socket, QString alias, QString type, QString MAC,
     this->MAC = MAC;
     this->state = false;
     this->requestedState = false;
-    this->dataReceiver = new DataReceiver();
-    this->dataTransmitter = new DataTransmitter(socket);
+    this->dataReceiver = new EndpointDataReceiver();
+    this->dataTransmitter = new EndpointDataTransmitter(socket);
+    this->autoControlled = false;
+    this->autoControlledState = false;
     if(clientSocket != NULL) {
         connect(clientSocket, SIGNAL(readyRead()), dataReceiver, SLOT(slotReceivedData()));
         connect(clientSocket, SIGNAL(disconnected()), this, SLOT(slotDisconnected()));
@@ -55,6 +57,7 @@ void Endpoint::slotPerformEvent(ScheduleEvent *event)
 {
     qDebug()<<__FUNCTION__<<" Alias: "<<getAlias()<<" EventType: "<<event->getType();
     ScheduleEvent::ScheduleEventType type = event->getType();
+   if (this->autoControlled) {
     if (type == ScheduleEvent::EVENT_ON) {
         requestState(true);
         event->setPerformed();
@@ -62,6 +65,11 @@ void Endpoint::slotPerformEvent(ScheduleEvent *event)
         requestState(false);
         event->setPerformed();
     }
+   } else {
+    //not auto controlled at the moment, save auto-state for later
+
+   }
+
     //ToDo: implement more possible state changes
     //e.g. analog etc
 
@@ -110,6 +118,7 @@ void Endpoint::updateScheduleEvent(ScheduleEvent* event)
         cout<<"Endpoint "<<getMAC().toStdString()<<" : Error inserting schedule event\n";
         cout<<"Id"<<event->getId()<<" is invalid";
     }
+    emit signalSchedulesChanged();
 }
 
 void Endpoint::slotDisconnected() {
@@ -160,6 +169,20 @@ bool Endpoint::getState() {
     return this->state;
 }
 
+void Endpoint::setAuto(bool autoControlled)
+{
+    this->autoControlled = autoControlled;
+    if (autoControlled == true &&
+            autoControlledState != requestedState) {
+        requestState(this->autoControlledState);
+    }
+}
+
+bool Endpoint::isAutoControlled()
+{
+    return this->autoControlled;
+}
+
 bool Endpoint::ackIdentification()
 {
     QByteArray payload;
@@ -167,15 +190,14 @@ bool Endpoint::ackIdentification()
     this->dataTransmitter->sendMessage(MESSAGETYPE_ENDPOINT_IDENT_ACK,payload);
     return true;
 }
+
 void Endpoint::requestState(bool state){
+    //save the requested state for later
     requestedState = state;
     if (this->isConnected()) {
-        //if connected, send a request now
-        QByteArray payload;
-        payload.append(getMAC());
-        payload.append(PDU_DELIMITER);
-        payload.append(state ? "1": "0");
-        sendMessage(MESSAGETYPE_SERVER_ENDPOINT_STATE_REQUEST,payload );
+       //the local state is not changed
+       //instead we wait for an update
+       this->dataTransmitter->sendStateRequest(state);
     }else  {
         //Not connected at the moment
         //state change request will be send once endpoint reconnected (updateSocket())

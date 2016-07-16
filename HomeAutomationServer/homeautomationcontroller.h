@@ -6,7 +6,7 @@
 #include <uiconnection.h>
 #include <QtNetwork>
 #include <tcpserver.h>
-#include <datareceiver.h>
+#include <UiDataReceiver.h>
 #include <PersistanceService.h>
 #include <SchedulingService.h>
 
@@ -31,8 +31,6 @@ private:
     void addUiConnection(QTcpSocket* socket, QString alias);
     void addEndpoint(QTcpSocket* socket, QString alias, QString type, QString MAC);
 
-    DataReceiver* dataReceiver;
-    DataTransmitter* dataTransmitter;
     TcpServer* tcpServer;
     //Clients which are identified as Endpoints
     //have to be confirmed by user (via UI)

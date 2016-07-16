@@ -3,11 +3,15 @@ INCLUDEPATH += ../HomeAutomation-Network
 
 
 SOURCES += \
-    datareceiver.cpp \
-    datatransmitter.cpp
+    $$PWD/EndpointDataReceiver.cpp \
+    $$PWD/EndpointDataTransmitter.cpp \
+    $$PWD/UiDataReceiver.cpp \
+    $$PWD/UiDataTransmitter.cpp
 
 HEADERS += \
-    datareceiver.h \
-    datatransmitter.h \
-    messagetype.h
+    messagetype.h \
+    $$PWD/EndpointDataReceiver.h \
+    $$PWD/EndpointDataTransmitter.h \
+    $$PWD/UiDataReceiver.h \
+    $$PWD/UiDataTransmitter.h
 

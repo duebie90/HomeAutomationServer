@@ -4,8 +4,8 @@
 #include <QObject>
 #include <QtNetwork>
 #include <iostream>
-#include <datareceiver.h>
-#include <datatransmitter.h>
+#include <UiDataReceiver.h>
+#include <UiDataTransmitter.h>
 #include <endpoint.h>
 
 using namespace std;
@@ -26,14 +26,15 @@ private slots:
 signals:
     void signalReceivedUiEndpointStateRequest(QString MAC, bool state);
     void signalReceivedEndpointSchedule(QString mac, ScheduleEvent* event);
+    void signalReceivedAutoRequest(QString mac, bool autoControlled);
     void signalResetServer();
     void signalDisconnected();
 private:    
     void sendEndpointStatesUpdate(QList<Endpoint*> endpoints);
 
     QTcpSocket* clientSocket;
-    DataReceiver* dataReceiver;
-    DataTransmitter* dataTransmitter;
+    UiDataReceiver* dataReceiver;
+    UiDataTransmitter* dataTransmitter;
     QString alias;
     bool connected;
     QList<Endpoint*> endpoints;

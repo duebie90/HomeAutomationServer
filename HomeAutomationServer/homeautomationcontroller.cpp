@@ -2,8 +2,8 @@
 
 #include <QtNetwork>
 #include <iostream>
-#include <datareceiver.h>
-#include <datatransmitter.h>
+#include <UiDataReceiver.h>
+#include <UiDataTransmitter.h>
 #include <messagetype.h>
 #include <PersistanceService.h>
 #include <SchedulingService.h>
@@ -22,7 +22,6 @@ HomeAutomationController::HomeAutomationController(QObject *parent):
     //this->tcpServer = new TcpServer("127.0.0.1", 3000);
     this->tcpServer = new TcpServer("localhost", 3000);
     //this->dataReceiver = new DataReceiver();
-    this->dataTransmitter = new DataTransmitter();
 
     uiUpdateTimer = new QTimer();
     uiUpdateTimer->setInterval(500);
@@ -47,11 +46,7 @@ HomeAutomationController::HomeAutomationController(QObject *parent):
             this->mapMacToEndpoint.insert(endpoint->getMAC(), endpoint);
         }
     }
-
-
-    //ToDo recover also UiConnections from database
-
-
+    ss->setEndpoints(this->endpoints);
 }
 
 HomeAutomationController::~HomeAutomationController() {
@@ -73,7 +68,7 @@ void HomeAutomationController::slotResetServer() {
     }
     endpoints.clear();
     ps->deleteEndpointsDatabase();
-    ss->updateSchedule(endpoints);
+    ss->setEndpoints(endpoints);
 }
 
 void HomeAutomationController::slotDeleteEndpoint(QString MAC) {
@@ -160,6 +155,7 @@ void HomeAutomationController::addUiConnection(QTcpSocket* socket, QString alias
     connect(newUiConnection, SIGNAL(signalReceivedEndpointSchedule(QString,ScheduleEvent*)),
             this, SLOT(slotForwardEndpointSchedule(QString,ScheduleEvent*)));
     connect(newUiConnection, SIGNAL(signalDisconnected()), this, SLOT(slotUiDisconnected()));
+
 }
 
 void HomeAutomationController::addEndpoint(QTcpSocket* socket, QString alias, QString type, QString MAC) {
@@ -167,7 +163,7 @@ void HomeAutomationController::addEndpoint(QTcpSocket* socket, QString alias, QS
     this->endpoints.append(newEndpoint);
     this->mapMacToEndpoint.insert(MAC, newEndpoint);
     newEndpoint->ackIdentification();
-    ss->updateSchedule(this->endpoints);
+    ss->setEndpoints(this->endpoints);
     ps->addEndpoint(newEndpoint);
 }
 

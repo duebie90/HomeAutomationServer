@@ -8,8 +8,8 @@ UiConnection::UiConnection(QTcpSocket* socket, QString alias, QObject* parent):
     cout<<"UI Connection Object created with alias "<<alias.toStdString()<<".\n";
     this->clientSocket = socket;
     this->alias = alias;
-    this->dataReceiver =  new DataReceiver();
-    this->dataTransmitter = new DataTransmitter(socket);
+    this->dataReceiver =  new UiDataReceiver();
+    this->dataTransmitter = new UiDataTransmitter(socket);
     this->connected = true;
     connect(clientSocket, SIGNAL(readyRead()), dataReceiver, SLOT(slotReceivedData()));
     connect(clientSocket, SIGNAL(disconnected()), this, SLOT(slotDisconnected()));
@@ -18,8 +18,7 @@ UiConnection::UiConnection(QTcpSocket* socket, QString alias, QObject* parent):
             this, SIGNAL(signalReceivedUiEndpointStateRequest(QString,bool)));
     connect(dataReceiver, SIGNAL(signalReceivedEndpointSchedule(QString,ScheduleEvent*)),
             this, SIGNAL(signalReceivedEndpointSchedule(QString,ScheduleEvent*)));
-
-
+    connect(dataReceiver, SIGNAL(signalReceivedAutoRequest(QString,bool)), this, SIGNAL(signalReceivedAutoRequest(QString,bool)));
     connect(dataReceiver, SIGNAL(signalResetServer()), this, SIGNAL(signalResetServer()));
 }
 void UiConnection::sendMessage(QByteArray message){
