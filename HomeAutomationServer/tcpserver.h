@@ -21,6 +21,7 @@ private slots:
     void slotNetworkSessionOpened();
     void slotClientConnected();
     void slotAcceptError();       
+    void slotReceivedData();
 signals:
     void signalClientConnected(QTcpSocket *client);
     //Signal forwarded from DataReceiver to HomeAutomationController
@@ -28,6 +29,8 @@ signals:
     void signalReceivedUiIdent(QTcpSocket* socket, QString alias, QString pass, QString MAC);
 
 private:
+    int processProtocollHeader(QTcpSocket* socket, QByteArray data);
+    void processMessage(QTcpSocket* socket, MessageType type, QByteArray payload);
     QTcpServer *tcpServer;
     QNetworkSession *session;
     QList<QTcpSocket*> clientSockets;
@@ -36,10 +39,7 @@ private:
     //Recently connected clients:
     //We wait for them to send their identification before they are visualized
     QList<QTcpSocket*> clientsPendingIdentification;
-    //Received data from unidentified clients
-    DataReceiver* dataReceiver;
-    //is mainly used to create server identification message
-    DataTransmitter* dataTransmitter;
+
 
 };
 

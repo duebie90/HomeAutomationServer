@@ -16,9 +16,9 @@ void EndpointDataTransmitter::updateSocket(QTcpSocket *socket) {
     this->client = socket;
 }
 
-int EndpointDataTransmitter::sendStateRequest(bool state) {
+int EndpointDataTransmitter::sendStateRequest(QString mac, bool state) {
     QByteArray payload;
-    payload.append(getMAC());
+    payload.append(mac);
     payload.append(PDU_DELIMITER);
     payload.append(state ? "1": "0");
     return sendMessage(MESSAGETYPE_SERVER_ENDPOINT_STATE_REQUEST,payload );

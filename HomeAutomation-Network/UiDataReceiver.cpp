@@ -80,17 +80,6 @@ void UiDataReceiver::processMessage(QTcpSocket* socket, MessageType type, QByteA
     QList<QByteArray> payloadParts = payload.split(0x1F);
 
     switch(type) {
-    case MESSAGETYPE_ENDPOINT_IDENT:
-        if( payloadParts.length() < 3 ) {
-            qDebug()<<"Faulty payload";
-            return;
-        }
-        alias   =   payloadParts.at(0);
-        MAC     =   payloadParts.at(1);
-        endpointType = payloadParts.at(2);
-
-        emit signalReceivedEndpointIdent(socket, alias, endpointType, MAC);
-        break;
     case MESSAGETYPE_ENDPOINT_STATE:
         //Endpoint informs server about its state
         //or server requests endpoint to change its state
@@ -148,10 +137,18 @@ void UiDataReceiver::processMessage(QTcpSocket* socket, MessageType type, QByteA
         MAC     =   payloadParts.at(2);
         emit signalReceivedUiIdent(socket, alias, pass, MAC);
     break;
-    case MESSAGETYPE_UI_ENDPOINT_AUTO: {
+    case MESSAGETYPE_UI_ENDPOINT_AUTO_REQUEST: {
         QString mac =payloadParts.at(0);
-        bool autoControlled = payloadParts.at(1);
-        emit signalReceivedAutoRequest(mac, autoControlled);
+        bool autoControlled = false;
+        if (payloadParts.at(1) == "1") {
+            autoControlled = true;
+            emit signalReceivedAutoRequest(mac, autoControlled);
+        } else if(payloadParts.at(1) == "0"){
+            autoControlled = false;
+            emit signalReceivedAutoRequest(mac, autoControlled);
+        }else {
+            cout<<"Error: Faulty payload MESSAGETYPE_UI_ENDPOINT_AUTO\n";
+        }
     }
         break;
     case MESSAGETYPE_UI_DELETE_ENTDPOINT:

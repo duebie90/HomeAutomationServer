@@ -30,7 +30,8 @@ void UiConnection::sendUpdate(QList<Endpoint *> endpoints)
     //send endpoint states list to ui
     sendEndpointStatesUpdate(endpoints);
     this->endpoints = endpoints;
-    slotPrepareEndpointSchedulesUpdate();
+    QTimer::singleShot(10, this, SLOT(slotPrepareEndpointSchedulesUpdate()) );
+    //slotPrepareEndpointSchedulesUpdate();
 }
 
 void UiConnection::slotReceivedUiEndpointStateRequest(QString MAC, bool state) {
@@ -72,6 +73,9 @@ void UiConnection::sendEndpointStatesUpdate(QList<Endpoint *> endpoints)
         payload.append(PDU_DELIMITER);
         bool connected = endpoint->isConnected();
         payload.append(connected ? "1": "0");
+        payload.append(PDU_DELIMITER);
+        bool autoControlled = endpoint->isAutoControlled();
+        payload.append(autoControlled ? "1": "0");
     }
     this->dataTransmitter->sendMessage(MESSAGETYPE_ENDPOINTS_STATES_LIST, payload);
 }

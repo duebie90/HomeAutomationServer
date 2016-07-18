@@ -12,7 +12,7 @@ class EndpointDataTransmitter: public QObject
 public:
     EndpointDataTransmitter(QTcpSocket* client=0, QObject* parent=0);
     void updateSocket(QTcpSocket* socket);
-    int sendStateRequest(bool state);
+    int sendStateRequest(QString mac, bool state);
     int sendMessage(MessageType type, QByteArray payload);
     QByteArray prepareMessage(MessageType type, QByteArray payload);
 public slots:

@@ -197,7 +197,7 @@ void Endpoint::requestState(bool state){
     if (this->isConnected()) {
        //the local state is not changed
        //instead we wait for an update
-       this->dataTransmitter->sendStateRequest(state);
+       this->dataTransmitter->sendStateRequest(getMAC(), state);
     }else  {
         //Not connected at the moment
         //state change request will be send once endpoint reconnected (updateSocket())

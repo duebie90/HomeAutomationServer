@@ -15,8 +15,8 @@ enum MessageType{
     MESSAGETYPE_UI_INFO_ACK,                //Identification ACK server -->ui
     MESSAGETYPE_UI_ENDPOINT_STATE_REQUEST,  // ui -->server
     MESSAGETYPE_UI_ENDPOINT_STATE_REQUEST_ANALOG,
-    MESSAGETYPE_UI_ENDPOINT_AUTO,           //ui -->server
-    MESSAGETYPE_UI_ENDPOINT_AUTO_ACK,       //server -->ui
+    MESSAGETYPE_UI_ENDPOINT_AUTO_REQUEST,   //ui -->server
+    MESSAGETYPE_UI_ENDPOINT_AUTO,            //server -->ui
     MESSAGETYPE_UI_DELETE_ENTDPOINT,
     MESSAGETYPE_RESET_SERVER,
     MESSAGETYPE_SERVER_ENDPOINT_STATE_REQUEST      // server -->endpoint

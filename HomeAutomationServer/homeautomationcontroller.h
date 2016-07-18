@@ -24,6 +24,7 @@ private slots:
     //forwarding of a state change Request to endpoints (called by UiConnection)
     void slotForwardStateChangeRequest(QString MAC, bool state);
     void slotForwardEndpointSchedule(QString MAC, ScheduleEvent* event);
+    void slotForwardEndpointAutoRequest(QString MAC, bool autoMode);
     void slotResetServer();
     void slotDeleteEndpoint(QString MAC);
     void slotUiDisconnected();
