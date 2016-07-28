@@ -7,7 +7,7 @@ ScheduleEvent::ScheduleEvent(int id, QTime startTime, QTime endTime, QDate date,
     endTime(endTime),
     date(date),
     repetition(repetition),
-    eventType(type),
+    pendingEventType(EVENT_NONE),
     pending(true),
     id(id)
 {
@@ -40,18 +40,18 @@ void ScheduleEvent::setId(int id)
 
 ScheduleEvent::ScheduleEventType ScheduleEvent::getType()
 {
-    return this->eventType;
+    return this->pendingEventType;
 }
 
 void ScheduleEvent::setType(ScheduleEvent::ScheduleEventType type)
 {
-    this->eventType = type;
+    this->pendingEventType = type;
     emit signalEventChanged();
 }
 
 QString ScheduleEvent::getTypeString()
 {
-    if (this->eventType == EVENT_ON) {
+    if (this->pendingEventType == EVENT_ON) {
         return "Einschalten";
     } else {
         return "Ausschalten";
@@ -157,7 +157,7 @@ QString ScheduleEvent::toString()
 {
     QString eventString;
     eventString.append(this->date.toString() + " EIN: " + this->startTime.toString() + " AUS: " +this->endTime.toString() );
-    if(this->eventType == EVENT_ON) {
+    if(this->pendingEventType == EVENT_ON) {
         eventString.append("EIN");
     } else {
         eventString.append("AUS");

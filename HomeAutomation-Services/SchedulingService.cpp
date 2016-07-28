@@ -40,7 +40,8 @@ void SchedulingService::slotHeartBeat()
 {
     QTime now = QTime::currentTime();
     QDate todaysDate = QDate::currentDate();
-    int secondsUntilEvent = -1;
+    int secondsUntilStartEvent = -1;
+    int secondsUntilEndEvent = -1;
     foreach(Endpoint* endpoint, this->endpoints)
     {
         bool takingPlaceToday = false;
@@ -74,14 +75,25 @@ void SchedulingService::slotHeartBeat()
                 qDebug()<<"Error on schedule Event: RepetitionType not recognized";
             }
             if (takingPlaceToday ) {
-                if(endpoint->getState() == false) {
+                int secondsUntilEvent = -1;
+               // if(endpoint->getState() == false) {
                     //endpoint current in OFF state
-                    secondsUntilEvent = now.secsTo(event->getStartTime());
-                } else {
+                    secondsUntilStartEvent = now.secsTo(event->getStartTime());
+               // } else {
                     //endpoint current in ON state
-                    secondsUntilEvent = now.secsTo(event->getEndTime());
+                    secondsUntilEndEvent = now.secsTo(event->getEndTime());
+               // }
+                bool takingPlaceWithingNextIntervall = false;
+                if (secondsUntilStartEvent <= hearBeatIntervallSeconds && secondsUntilStartEvent >0 ) {
+                    takingPlaceWithingNextIntervall = true;
+                    event->setType(ScheduleEvent::EVENT_ON);
+                    secondsUntilEvent = secondsUntilStartEvent;
+                }else if (secondsUntilEndEvent <= hearBeatIntervallSeconds && secondsUntilEndEvent >0 ) {
+                    takingPlaceWithingNextIntervall = true;
+                    event->setType(ScheduleEvent::EVENT_OFF);
+                    secondsUntilEvent = secondsUntilEndEvent;
                 }
-                if(secondsUntilEvent <= hearBeatIntervallSeconds && secondsUntilEvent >0 ) {
+                if (takingPlaceWithingNextIntervall && secondsUntilEvent >0) {
                     QTimer* newTimer = new QTimer();
                     newTimer->setInterval(secondsUntilEvent*1000);
                     newTimer->setSingleShot(true);
@@ -103,9 +115,10 @@ void SchedulingService::slotPerformEvent()
     QTimer* expiredTimer = (QTimer*)QObject::sender();
     Endpoint* concerningEndpoint = this->mapTimerToEndpoint.value(expiredTimer);
     ScheduleEvent* event    = this->mapTimerToEvent.value(expiredTimer);
-    concerningEndpoint->slotPerformEvent(event);
-    this->mapTimerToEndpoint.remove(expiredTimer);
-    this->mapTimerToEvent.remove(expiredTimer);
-
+    if( concerningEndpoint != NULL && event != NULL ) {
+        concerningEndpoint->slotPerformEvent(event);
+        this->mapTimerToEndpoint.remove(expiredTimer);
+        this->mapTimerToEvent.remove(expiredTimer);
+    }
 }
 

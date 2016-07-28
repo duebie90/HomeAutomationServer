@@ -17,6 +17,8 @@ Endpoint::Endpoint(QTcpSocket* socket, QString alias, QString type, QString MAC,
     if(clientSocket != NULL) {
         connect(clientSocket, SIGNAL(readyRead()), dataReceiver, SLOT(slotReceivedData()));
         connect(clientSocket, SIGNAL(disconnected()), this, SLOT(slotDisconnected()));
+        connect(clientSocket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(slotSocketError(QAbstractSocket::SocketError)));
+        //clientSocket->setSocketOption(QAbstractSocket::KeepAliveOption, QVariant::fromValue(true));
     }
 
     connect(dataReceiver, SIGNAL(signalReceivedEndpointState(QString,bool)), this, SLOT(slotReceivedState(QString,bool)));
@@ -53,10 +55,25 @@ void Endpoint::slotStateRequested(bool state) {
 
 }
 
+void Endpoint::slotSocketError(QAbstractSocket::SocketError socketError)
+{
+    switch (socketError) {
+     case QAbstractSocket::ConnectionRefusedError:
+          cout<<"Endpoint " + getAlias().toStdString() + "Socket Error: Connection refused \n";
+          break;
+     case QAbstractSocket::RemoteHostClosedError:
+        this->clientSocket->close();
+        break;
+     default:
+        cout<<"Endpoint " + getAlias().toStdString() + "Socket Error: \n";
+        break;
+     }
+}
+
 void Endpoint::slotPerformEvent(ScheduleEvent *event)
 {
     qDebug()<<__FUNCTION__<<" Alias: "<<getAlias()<<" EventType: "<<event->getType();
-    ScheduleEvent::ScheduleEventType type = event->getType();
+   ScheduleEvent::ScheduleEventType type = event->getType();
    if (this->autoControlled) {
     if (type == ScheduleEvent::EVENT_ON) {
         requestState(true);
@@ -137,7 +154,8 @@ void Endpoint::updateSocket(QTcpSocket* newSocket) {
     this->connected = true;
     connect(clientSocket, SIGNAL(readyRead()), dataReceiver, SLOT(slotReceivedData()));
     connect(clientSocket, SIGNAL(disconnected()), this, SLOT(slotDisconnected()));
-
+    connect(clientSocket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(slotSocketError(QAbstractSocket::SocketError)));
+    clientSocket->setSocketOption(QAbstractSocket::KeepAliveOption, QVariant::fromValue(true));
     if(requestedState != state) {
         //a state change was requested when this endpoint was offline
         //now try to send request again

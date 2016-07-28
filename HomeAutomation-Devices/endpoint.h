@@ -53,6 +53,8 @@ private slots:
     //from ui-controller
     void slotStateRequested(bool state);
 
+    void slotSocketError(QAbstractSocket::SocketError socketError);
+
 private:
     void receivedData();
     QString alias;

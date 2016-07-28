@@ -21,7 +21,8 @@ public:
     enum ScheduleEventType {
         EVENT_ON,
         EVENT_OFF,
-        EVENT_ANALOG
+        EVENT_ANALOG,
+        EVENT_NONE
     };
     Q_ENUMS(ScheduleEventType)
 
@@ -107,7 +108,7 @@ private:
 
     //stores if another processing is required
     RepetitionType repetition;
-    ScheduleEventType eventType;
+    ScheduleEventType pendingEventType;
     //if repetition is weekly: active days can be chosen
     QList<bool> weekdays;
 

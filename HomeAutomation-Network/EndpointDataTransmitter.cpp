@@ -30,7 +30,7 @@ int EndpointDataTransmitter::sendMessage(MessageType type, QByteArray payload) {
         message = prepareMessage(type, payload);
         this->client->write(message, message.length());
         int success = this->client->write(message, message.length());
-        if(success <= 0) {
+        if(success <= 0 || !this->client->isOpen()) {
             cout<<"Error writing to socket. Connected to "<<this->client->peerAddress().toString().toStdString()<<" "<<this->client->peerName().toStdString()<<"\n";
             return -1;
         }

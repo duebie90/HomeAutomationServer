@@ -83,16 +83,14 @@ void UiConnection::sendEndpointStatesUpdate(QList<Endpoint *> endpoints)
 void UiConnection::sendEndpointSchedulesUpdate(QString mac, QList<ScheduleEvent *> schedules)
 {
     quint8 schedulesCount = schedules.length();
-    if (schedulesCount != 0) {
-        QByteArray payload;
-        QDataStream out(&payload, QIODevice::ReadWrite);
-        out<<mac;
-        out<<schedulesCount;
-        foreach(ScheduleEvent* scheduleEvent, schedules) {
-            out<<scheduleEvent;
-        }
-        this->dataTransmitter->sendMessage(MESSAGETYPE_ENDPOINTS_SCHEDULES_LIST, payload);
+    QByteArray payload;
+    QDataStream out(&payload, QIODevice::ReadWrite);
+    out<<mac;
+    out<<schedulesCount;
+    foreach(ScheduleEvent* scheduleEvent, schedules) {
+        out<<scheduleEvent;
     }
+    this->dataTransmitter->sendMessage(MESSAGETYPE_ENDPOINTS_SCHEDULES_LIST, payload);
 }
 
 QHostAddress UiConnection::getIp()

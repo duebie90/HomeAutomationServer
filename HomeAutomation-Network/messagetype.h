@@ -5,8 +5,9 @@
 
 enum MessageType{
     MESSAGETYPE_ENDPOINT_IDENT = 0x21,      //Identification endpoint -->server
-    MESSAGETYPE_ENDPOINT_IDENT_ACK,         //Identification ACK server --> endpoint
-    MESSAGETYPE_ENDPOINT_STATE,             //State update endpoint --> server
+    MESSAGETYPE_ENDPOINT_IDENT_ACK = 0x22,         //Identification ACK server --> endpoint
+    MESSAGETYPE_ENDPOINT_STATE = 0x23,             //State update endpoint --> server
+    MESSAGETYPE_SERVER_ENDPOINT_STATE_REQUEST = 0x24,      // server -->endpoint
     MESSAGETYPE_ENDPOINT_SCHEDULE,          // ui -> server
     MESSAGETYPE_ENDPOINTS_LIST,             //
     MESSAGETYPE_ENDPOINTS_STATES_LIST,      // server --> ui
@@ -18,8 +19,8 @@ enum MessageType{
     MESSAGETYPE_UI_ENDPOINT_AUTO_REQUEST,   //ui -->server
     MESSAGETYPE_UI_ENDPOINT_AUTO,            //server -->ui
     MESSAGETYPE_UI_DELETE_ENTDPOINT,
-    MESSAGETYPE_RESET_SERVER,
-    MESSAGETYPE_SERVER_ENDPOINT_STATE_REQUEST      // server -->endpoint
+    MESSAGETYPE_RESET_SERVER
+
 
 
 };
