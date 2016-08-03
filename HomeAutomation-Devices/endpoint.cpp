@@ -138,6 +138,15 @@ void Endpoint::updateScheduleEvent(ScheduleEvent* event)
     emit signalSchedulesChanged();
 }
 
+void Endpoint::removeSchedule(int id)
+{
+    ScheduleEvent* event = this->scheduleEvents.value(id);
+    if(event != NULL) {
+        this->scheduleEvents.remove(id);
+    }
+    emit signalSchedulesChanged();
+}
+
 void Endpoint::slotDisconnected() {
     cout<<__FUNCTION__<<" Alias "<<this->alias.toStdString()<<"\n";
     this->connected = false;

@@ -18,6 +18,7 @@ UiConnection::UiConnection(QTcpSocket* socket, QString alias, QObject* parent):
             this, SIGNAL(signalReceivedUiEndpointStateRequest(QString,bool)));
     connect(dataReceiver, SIGNAL(signalReceivedEndpointSchedule(QString,ScheduleEvent*)),
             this, SIGNAL(signalReceivedEndpointSchedule(QString,ScheduleEvent*)));
+    connect(dataReceiver, SIGNAL(signalDeleteSchedule(QString, int)), this, SIGNAL(signalDeleteSchedule(QString,int)));
     connect(dataReceiver, SIGNAL(signalReceivedAutoRequest(QString,bool)), this, SIGNAL(signalReceivedAutoRequest(QString,bool)));
     connect(dataReceiver, SIGNAL(signalResetServer()), this, SIGNAL(signalResetServer()));
 }

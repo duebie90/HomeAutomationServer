@@ -29,6 +29,7 @@ signals:
     void signalReceivedAutoRequest(QString mac, bool autoControlled);
     void signalResetServer();
     void signalDisconnected();
+    void signalDeleteSchedule(QString mac, int scheduleId);
 private:    
     void sendEndpointStatesUpdate(QList<Endpoint*> endpoints);
 

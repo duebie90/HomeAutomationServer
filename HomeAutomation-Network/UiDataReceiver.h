@@ -29,6 +29,7 @@ signals:
     void signalReceivedAutoRequest(QString mac, bool autoControlled);
     void signalDeleteEndpoint();
     void signalResetServer();
+    void signalDeleteSchedule(QString mac, int id);
     //...
 private:
     int processProtocollHeader(QTcpSocket* socket, QByteArray data);

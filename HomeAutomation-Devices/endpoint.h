@@ -34,6 +34,7 @@ public:
     QMap<int, ScheduleEvent*> getScheduledEvents();
     //is used to either update or add a new event
     void updateScheduleEvent(ScheduleEvent* event);
+    void removeSchedule(int id);
     enum EndpointType {
         //those are example
         switchbox,

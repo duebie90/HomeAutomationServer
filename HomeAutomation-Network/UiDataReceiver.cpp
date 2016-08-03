@@ -151,7 +151,7 @@ void UiDataReceiver::processMessage(QTcpSocket* socket, MessageType type, QByteA
         }
     }
         break;
-    case MESSAGETYPE_UI_DELETE_ENTDPOINT:
+    case MESSAGETYPE_UI_DELETE_ENDPOINT:
         qDebug()<<__FUNCTION__<<"Received delete-endpoint message";
         emit signalDeleteEndpoint();
         break;
@@ -167,6 +167,13 @@ void UiDataReceiver::processMessage(QTcpSocket* socket, MessageType type, QByteA
             in>>event;
             emit signalReceivedEndpointSchedule(MAC, event);
         }
+        break;
+    }
+    case MESSAGETYPE_UI_DELETE_SCHEDULE: {
+        QString mac = payloadParts.at(0);
+        int id = payloadParts.at(1).toInt();
+        qDebug()<<__FUNCTION__<<"UI Delete Schedule id: "<<id;
+        emit signalDeleteSchedule(mac, id);
         break;
     }
     default:
