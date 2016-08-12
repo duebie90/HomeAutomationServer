@@ -92,6 +92,27 @@ QList<Endpoint *> PersistanceService::getEndpoints()
     return endpoints;
 }
 
+bool PersistanceService::deleteEndpoint(QString mac)
+{
+    QSqlQuery query;
+    if (!databaseReady) {
+        cout<<"Error: database not ready. Settings will be lost after restart or power loss.\n";
+        return false;
+    }
+    QString macWithQuotation =  "'" + mac + "'";
+    query.prepare("DELETE FROM endpoints WHERE macAdress = (:macAdress)");
+    query.bindValue(":macAdress", mac);
+    if(!query.exec() ) {
+        qDebug()<<"Error while getting endpoint information from database.";
+        qDebug()<<"Last DB Error: "<<query.lastError();
+        return false;
+    }
+    qDebug()<<"Last Query was"<<query.lastQuery();
+    qDebug()<<"Last result was "<<query.lastError();
+
+    return true;
+}
+
 void PersistanceService::deleteEndpointsDatabase()
 {
     QFile dbFile;

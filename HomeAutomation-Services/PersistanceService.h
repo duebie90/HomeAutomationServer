@@ -14,6 +14,7 @@ public:
     bool addEndpoint(Endpoint* endpoint);
     QList<QString> getEndpointNames();
     QList<Endpoint*> getEndpoints();
+    bool deleteEndpoint(QString mac);
     void deleteEndpointsDatabase();
 signals:
 

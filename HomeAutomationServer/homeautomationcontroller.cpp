@@ -238,6 +238,7 @@ void HomeAutomationController::slotForwardDeleteEndpoint(QString mac)
             this->endpoints.removeOne(endpoint);
             this->mapMacToEndpoint.remove(mac);
             ss->setEndpoints(this->endpoints);
+            ps->deleteEndpoint(mac);
         }
     }
 }
