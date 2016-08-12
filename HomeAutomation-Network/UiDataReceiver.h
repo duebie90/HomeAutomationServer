@@ -27,7 +27,7 @@ signals:
     void signalReceivedUiIdent(QTcpSocket* socket, QString alias, QString pass, QString MAC);
     void signalReceivedEndpointSchedule(QString mac, ScheduleEvent* scheduleEvent);
     void signalReceivedAutoRequest(QString mac, bool autoControlled);
-    void signalDeleteEndpoint();
+    void signalDeleteEndpoint(QString mac);
     void signalResetServer();
     void signalDeleteSchedule(QString mac, int id);
     //...

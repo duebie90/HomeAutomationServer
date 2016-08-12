@@ -151,10 +151,6 @@ void UiDataReceiver::processMessage(QTcpSocket* socket, MessageType type, QByteA
         }
     }
         break;
-    case MESSAGETYPE_UI_DELETE_ENDPOINT:
-        qDebug()<<__FUNCTION__<<"Received delete-endpoint message";
-        emit signalDeleteEndpoint();
-        break;
     case MESSAGETYPE_RESET_SERVER:
         emit signalResetServer();
         qDebug()<<__FUNCTION__<<"Received server-reset message";
@@ -169,13 +165,19 @@ void UiDataReceiver::processMessage(QTcpSocket* socket, MessageType type, QByteA
         }
         break;
     }
+    case MESSAGETYPE_UI_DELETE_ENDPOINT: {
+        QString mac = payloadParts.at(0);
+        emit signalDeleteEndpoint(mac);
+    }
+    break;
     case MESSAGETYPE_UI_DELETE_SCHEDULE: {
         QString mac = payloadParts.at(0);
         int id = payloadParts.at(1).toInt();
         qDebug()<<__FUNCTION__<<"UI Delete Schedule id: "<<id;
         emit signalDeleteSchedule(mac, id);
-        break;
+
     }
+    break;
     default:
         qDebug()<<__FUNCTION__<<"Unrecognized MessageType";
     }

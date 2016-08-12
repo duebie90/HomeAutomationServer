@@ -25,6 +25,7 @@ private slots:
     void slotForwardStateChangeRequest(QString MAC, bool state);
     void slotForwardEndpointSchedule(QString MAC, ScheduleEvent* event);
     void slotForwardEndpointAutoRequest(QString MAC, bool autoMode);
+    void slotForwardDeleteEndpoint(QString mac);
     void slotForwardEndpointDeleteSchedule(QString mac, int id);
     void slotResetServer();
     void slotDeleteEndpoint(QString MAC);
