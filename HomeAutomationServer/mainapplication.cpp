@@ -16,7 +16,8 @@ void MainApplication::run() {
     qDebug()<<__FUNCTION__;
     cout<<"Home Automation Server \n";
 
-    homeAutomationController = new HomeAutomationController();
+    //creates the singleton sinstance and starts the controller
+    homeAutomationController->initiate();
     //QThread* homeAutomationControllerThread = new QThread();
     //homeAutomationController->moveToThread(homeAutomationControllerThread);
 
@@ -31,7 +32,7 @@ void MainApplication::run() {
 
 void MainApplication::slotAboutToQuit() {
     qDebug()<<__FUNCTION__;
-    delete(homeAutomationController);
+    HomeAutomationController::getInstance()->deInitialize();
 
     //called by app
     //ToDo clean up and stop all thread

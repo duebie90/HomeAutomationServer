@@ -15,8 +15,9 @@ class HomeAutomationController: public QObject
 {
     Q_OBJECT
 public:
-    HomeAutomationController(QObject* parent=0);
-    ~HomeAutomationController();    
+    static HomeAutomationController *getInstance();
+    void initiate();
+    void deInitialize();
 private slots:
     void slotUpdateUis();
     void slotProcessMessageNewUi(QTcpSocket* socket, QString alias, QString pass, QString MAC);
@@ -31,6 +32,11 @@ private slots:
     void slotDeleteEndpoint(QString MAC);
     void slotUiDisconnected();
 private:
+    //This is a singlton class
+    HomeAutomationController(QObject* parent=0);
+    ~HomeAutomationController();
+    static HomeAutomationController *_instance;
+
     void addUiConnection(QTcpSocket* socket, QString alias);
     void addEndpoint(QTcpSocket* socket, QString alias, QString type, QString MAC);
 

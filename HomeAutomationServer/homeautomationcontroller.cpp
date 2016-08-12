@@ -11,6 +11,7 @@
 
 #define tempPassword "fhkiel"
 
+HomeAutomationController *HomeAutomationController::_instance = NULL;
 
 using namespace std;
 
@@ -168,6 +169,26 @@ void HomeAutomationController::addEndpoint(QTcpSocket* socket, QString alias, QS
     newEndpoint->ackIdentification();
     ss->setEndpoints(this->endpoints);
     ps->addEndpoint(newEndpoint);
+}
+
+
+HomeAutomationController *HomeAutomationController::getInstance()
+{
+    if (_instance == NULL) {
+        _instance = new HomeAutomationController();
+    }
+    return _instance;
+}
+
+void HomeAutomationController::initiate()
+{
+    getInstance();
+}
+
+void HomeAutomationController::deInitialize()
+{
+    delete(_instance);
+    //ToDo: stop services etc.
 }
 
 void HomeAutomationController::slotUpdateUis() {
