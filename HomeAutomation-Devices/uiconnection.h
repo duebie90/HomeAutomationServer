@@ -22,11 +22,11 @@ public:
 private slots:  
     void slotDisconnected();
     void slotReceivedUiEndpointStateRequest(QString MAC, bool state);
+    void slotReceivedEndpointSchedule(QString mac, ScheduleEvent* event);
+    void slotReceivedAutoRequest(QString mac, bool autoControlled);
     void slotPrepareEndpointSchedulesUpdate();
+
 signals:
-    void signalReceivedUiEndpointStateRequest(QString MAC, bool state);
-    void signalReceivedEndpointSchedule(QString mac, ScheduleEvent* event);
-    void signalReceivedAutoRequest(QString mac, bool autoControlled);
     void signalResetServer();
     void signalDisconnected();
     void signalDeleteEndpoint(QString mac);

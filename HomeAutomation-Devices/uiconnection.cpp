@@ -1,6 +1,11 @@
 #include "uiconnection.h"
 #include <QtNetwork>
 
+//#include <../HomeAutomation-Services/PersistanceService.h>
+
+class PersistanceService;
+
+#include <../HomeAutomation-Services/PersistanceService.h>
 
 UiConnection::UiConnection(QTcpSocket* socket, QString alias, QObject* parent):
     QObject(parent)
@@ -15,12 +20,15 @@ UiConnection::UiConnection(QTcpSocket* socket, QString alias, QObject* parent):
     connect(clientSocket, SIGNAL(disconnected()), this, SLOT(slotDisconnected()));
     //connections from data receiver
     connect(dataReceiver, SIGNAL(signalReceivedUiEndpointStateRequest(QString,bool)),
-            this, SIGNAL(signalReceivedUiEndpointStateRequest(QString,bool)));
+            this, SLOT(slotReceivedUiEndpointStateRequest(QString,bool)));
     connect(dataReceiver, SIGNAL(signalReceivedEndpointSchedule(QString,ScheduleEvent*)),
-            this, SIGNAL(signalReceivedEndpointSchedule(QString,ScheduleEvent*)));
-    connect(dataReceiver, SIGNAL(signalDeleteEndpoint(QString)), this, SIGNAL(signalDeleteEndpoint(QString)));
-    connect(dataReceiver, SIGNAL(signalDeleteSchedule(QString, int)), this, SIGNAL(signalDeleteSchedule(QString,int)));
-    connect(dataReceiver, SIGNAL(signalReceivedAutoRequest(QString,bool)), this, SIGNAL(signalReceivedAutoRequest(QString,bool)));
+            this, SLOT(slotReceivedEndpointSchedule(QString,ScheduleEvent*)));
+    connect(dataReceiver, SIGNAL(signalDeleteEndpoint(QString)),
+            this, SIGNAL(signalDeleteEndpoint(QString)));
+    connect(dataReceiver, SIGNAL(signalDeleteSchedule(QString, int)),
+            this, SIGNAL(signalDeleteSchedule(QString,int)));
+    connect(dataReceiver, SIGNAL(signalReceivedAutoRequest(QString,bool)),
+            this, SLOT(slotReceivedAutoRequest(QString,bool)));
     connect(dataReceiver, SIGNAL(signalResetServer()), this, SIGNAL(signalResetServer()));
 }
 void UiConnection::sendMessage(QByteArray message){
@@ -37,8 +45,29 @@ void UiConnection::sendUpdate(QList<Endpoint *> endpoints)
 }
 
 void UiConnection::slotReceivedUiEndpointStateRequest(QString MAC, bool state) {
+    PersistanceService* ps = PersistanceService::getInstance();
+    Endpoint* endpoint = ps->getEndpointByMac(MAC);
+    if (endpoint != NULL) {
+        endpoint->requestState(state);
+    }
+}
 
+void UiConnection::slotReceivedEndpointSchedule(QString mac, ScheduleEvent *event)
+{
+    PersistanceService* ps = PersistanceService::getInstance();
+    Endpoint* endpoint = ps->getEndpointByMac(mac);
+    if(endpoint != NULL) {
+        endpoint->updateScheduleEvent(event);
+    }
+}
 
+void UiConnection::slotReceivedAutoRequest(QString mac, bool autoMode)
+{
+    PersistanceService* ps = PersistanceService::getInstance();
+    Endpoint* endpoint = ps->getEndpointByMac(mac);
+    if(endpoint != NULL) {
+        endpoint->setAuto(autoMode);
+    }
 }
 
 void UiConnection::slotPrepareEndpointSchedulesUpdate()

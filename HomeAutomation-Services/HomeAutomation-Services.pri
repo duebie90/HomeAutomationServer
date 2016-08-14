@@ -1,8 +1,5 @@
 
-INCLUDEPATH +=  ../HomeAutomation-Services \
-                ../HomeAutomation-Devices \
-                ../HomeAutomation-Network \
-                ../HomeAutomationServer
+INCLUDEPATH +=  ../HomeAutomation-Services
 
 SOURCES += SchedulingService.cpp \
            PersistanceService.cpp

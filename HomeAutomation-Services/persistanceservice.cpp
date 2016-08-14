@@ -2,6 +2,10 @@
 #include <QtSql>
 #include <QDebug>
 #include <QDir>
+#include <homeautomationcontroller.h>
+
+PersistanceService* PersistanceService::_instance = NULL;
+
 PersistanceService::PersistanceService(QObject *parent) :
     QObject(parent),
     databaseReady(false),
@@ -41,30 +45,7 @@ QList<QString> PersistanceService::getEndpointNames() {
     return endpointNames;
 }
 
-bool PersistanceService::addEndpoint(Endpoint *endpoint) {
-    if (!databaseReady) {
-        cout<<"Error: database not ready. Settings will be lost after restart or power loss.\n";
-        return false;
-    }
-    int id = getEndpointCount();
-    QString name = endpoint->getAlias();
-    QString MAC  = endpoint->getMAC();
-    QString type = endpoint->getType();
-    QSqlQuery query;
-    query.prepare("INSERT INTO endpoints (id, name, macAdress, endpointType) VALUES (:id, :name, :mac, :type)");
-    query.bindValue(":id", id);
-    query.bindValue(":name", name);
-    query.bindValue(":mac", MAC);
-    query.bindValue(":type", type);
-    if(!query.exec() ) {
-        qDebug()<<"Error while sql query";
-        qDebug()<<"Last DB Error: "<<query.lastError();
-        return false;
-    }
-    return true;
-}
-
-QList<Endpoint *> PersistanceService::getEndpoints()
+QList<Endpoint *> PersistanceService::loadEndpoints()
 {
     QList<Endpoint*> endpoints;
     QSqlQuery query;
@@ -92,8 +73,77 @@ QList<Endpoint *> PersistanceService::getEndpoints()
     return endpoints;
 }
 
+PersistanceService *PersistanceService::getInstance()
+{
+
+    if (_instance == NULL) {
+        _instance = new PersistanceService();
+    }
+    return _instance;
+}
+
+void PersistanceService::init()
+{
+    getInstance();
+}
+
+void PersistanceService::deInitiate()
+{
+    delete(_instance);
+}
+
+bool PersistanceService::addEndpoint(Endpoint *endpoint) {
+
+    this->endpoints.append(endpoint);
+    this->mapMacToEndpoint.insert(endpoint->getMAC(), endpoint);
+
+    if (!databaseReady) {
+        cout<<"Error: database not ready. Settings will be lost after restart or power loss.\n";
+        return false;
+    }
+    int id = getEndpointCount();
+    QString name = endpoint->getAlias();
+    QString MAC  = endpoint->getMAC();
+    QString type = endpoint->getType();
+    QSqlQuery query;
+    query.prepare("INSERT INTO endpoints (id, name, macAdress, endpointType) VALUES (:id, :name, :mac, :type)");
+    query.bindValue(":id", id);
+    query.bindValue(":name", name);
+    query.bindValue(":mac", MAC);
+    query.bindValue(":type", type);
+    if(!query.exec() ) {
+        qDebug()<<"Error while sql query";
+        qDebug()<<"Last DB Error: "<<query.lastError();
+        return false;
+    }
+    return true;
+}
+
+QList<Endpoint *> PersistanceService::getEndpoints()
+{
+    return this->endpoints;
+}
+
+Endpoint *PersistanceService::getEndpointByMac(QString mac)
+{
+    if (this->mapMacToEndpoint.contains(mac)) {
+        //Endpoint exists --> get Pointer at it
+        Endpoint* endpoint = this->mapMacToEndpoint.value(mac);
+        return endpoint;
+    }
+    return NULL;
+}
+
 bool PersistanceService::deleteEndpoint(QString mac)
 {
+    Endpoint* endpoint = getEndpointByMac(mac);
+    if  (endpoint != NULL) {
+        if (!endpoint->isConnected()) {
+            this->endpoints.removeOne(endpoint);
+            this->mapMacToEndpoint.remove(mac);
+        }
+    }
+
     QSqlQuery query;
     if (!databaseReady) {
         cout<<"Error: database not ready. Settings will be lost after restart or power loss.\n";
@@ -115,6 +165,12 @@ bool PersistanceService::deleteEndpoint(QString mac)
 
 void PersistanceService::deleteEndpointsDatabase()
 {
+    this->mapMacToEndpoint.clear();
+    foreach(Endpoint* endpoint, this->endpoints) {
+        delete endpoint;
+    }
+    endpoints.clear();
+
     QFile dbFile;
     dbFile.setFileName(schedulesDb.databaseName());
     if (dbFile.exists()) {

@@ -7,7 +7,7 @@
 #include <QtNetwork>
 #include <tcpserver.h>
 #include <UiDataReceiver.h>
-#include <PersistanceService.h>
+#include <../HomeAutomation-Services/PersistanceService.h>
 #include <SchedulingService.h>
 
 
@@ -18,14 +18,12 @@ public:
     static HomeAutomationController *getInstance();
     void initiate();
     void deInitialize();
+
 private slots:
     void slotUpdateUis();
     void slotProcessMessageNewUi(QTcpSocket* socket, QString alias, QString pass, QString MAC);
     void slotProcessMessageNewEndpoint(QTcpSocket* socket, QString alias, QString type, QString MAC);
-    //forwarding of a state change Request to endpoints (called by UiConnection)
-    void slotForwardStateChangeRequest(QString MAC, bool state);
-    void slotForwardEndpointSchedule(QString MAC, ScheduleEvent* event);
-    void slotForwardEndpointAutoRequest(QString MAC, bool autoMode);
+
     void slotForwardDeleteEndpoint(QString mac);
     void slotForwardEndpointDeleteSchedule(QString mac, int id);
     void slotResetServer();
@@ -46,11 +44,11 @@ private:
     QList<QTcpSocket*> endpointsPendingConfirmation;
     //Instances of Endpoint or uiConnection are created
     //to handle identified client-connections
-    QList<Endpoint*> endpoints;
+    //QList<Endpoint*> endpoints;
     QList<UiConnection*> uiConnections;
     //Map necessary for client recognition on reconnect
 
-    QMap<QString, Endpoint*> mapMacToEndpoint;
+    //QMap<QString, Endpoint*> mapMacToEndpoint;
     //QUuid hacUuid;
     QString pwd;
     QTimer* uiUpdateTimer;

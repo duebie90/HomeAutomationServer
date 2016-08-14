@@ -34,28 +34,27 @@ HomeAutomationController::HomeAutomationController(QObject *parent):
     connect(tcpServer, SIGNAL(signalReceivedUiIdent(QTcpSocket*,QString, QString, QString)),
             this, SLOT( slotProcessMessageNewUi(QTcpSocket*,QString,QString, QString)));    
 
-    ps = new PersistanceService();
+    ps = PersistanceService::getInstance();
     ss = new SchedulingService();
 
 
     //Recover endpoint information from database
-    QList<Endpoint*> recoveredEndpoints = ps->getEndpoints();
+    QList<Endpoint*> recoveredEndpoints = ps->loadEndpoints();
     if (recoveredEndpoints.length() > 0) {
         cout<<"Recovered "<<recoveredEndpoints.length()<<" endpoint-information from database\n";
-        this->endpoints.append(recoveredEndpoints);
         foreach(Endpoint* endpoint, recoveredEndpoints) {
-            this->mapMacToEndpoint.insert(endpoint->getMAC(), endpoint);
+            ps->addEndpoint(endpoint);
         }
     }
-    ss->setEndpoints(this->endpoints);
+    ss->setEndpoints(ps->getEndpoints());
 }
 
 HomeAutomationController::~HomeAutomationController() {
     endpointsPendingConfirmation.clear();
-    endpoints.clear();
+    //endpoints.clear();
     uiConnections.clear();
     delete(tcpServer);
-    delete(ps);
+    ps->deInitiate();
 }
 
 void HomeAutomationController::slotResetServer() {
@@ -63,22 +62,14 @@ void HomeAutomationController::slotResetServer() {
     //clear permanently stored data (ini or Sqlite)
     tcpServer->resetClientsPendingIdentification();
     endpointsPendingConfirmation.clear();
-    this->mapMacToEndpoint.clear();
-    foreach(Endpoint* endpoint, this->endpoints) {
-        delete endpoint;
-    }
-    endpoints.clear();
     ps->deleteEndpointsDatabase();
-    ss->setEndpoints(endpoints);
+    ss->setEndpoints(ps->getEndpoints());
 }
 
 void HomeAutomationController::slotDeleteEndpoint(QString MAC) {
     cout<<"Deleting endpoint with MAC "<<MAC.toStdString()<<" was requested:";
-    if (this->mapMacToEndpoint.contains(MAC)) {
-        //Endpoint exists --> get Pointer at it
-        Endpoint* endpoint = this->mapMacToEndpoint.value(MAC);
-        this->endpoints.removeOne(endpoint);
-        this->mapMacToEndpoint.remove(MAC);
+    if (ps->getEndpointByMac(MAC) != NULL) {
+        ps->deleteEndpoint(MAC);
         cout<<" done.\n";
     }else {
         cout<<"failed. Adress unknown.\n";
@@ -97,12 +88,12 @@ void HomeAutomationController::slotProcessMessageNewEndpoint(QTcpSocket* socket,
     if (alias != "" && type!="" && MAC != "") {
         //message seems to be valid
         //so check if that Endpoint is already known
-        if(this->mapMacToEndpoint.contains(MAC)) {
+        if(ps->getEndpointByMac(MAC) != NULL) {
             //The Endpoint is already known
             cout<<"Endpoint with alias "<<alias.toStdString()<<" has reconnected\n";
 
             Endpoint* reconnectedEndpoint;
-            reconnectedEndpoint = this->mapMacToEndpoint.value(MAC);
+            reconnectedEndpoint = ps->getEndpointByMac(MAC);
             if (reconnectedEndpoint->getAlias() == alias) {
                 reconnectedEndpoint->updateSocket(socket);
                 reconnectedEndpoint->ackIdentification();
@@ -150,25 +141,19 @@ void HomeAutomationController::addUiConnection(QTcpSocket* socket, QString alias
     //dequeue unIdentified socket
     tcpServer->clientIdentified(socket);
     //connect signals
-    connect(newUiConnection, SIGNAL(signalReceivedUiEndpointStateRequest(QString,bool)),
-            this, SLOT(slotForwardStateChangeRequest(QString,bool)));
     connect(newUiConnection, SIGNAL(signalResetServer()), this, SLOT(slotResetServer()));
-    connect(newUiConnection, SIGNAL(signalReceivedEndpointSchedule(QString,ScheduleEvent*)),
-            this, SLOT(slotForwardEndpointSchedule(QString,ScheduleEvent*)));
     connect(newUiConnection, SIGNAL(signalDisconnected()), this, SLOT(slotUiDisconnected()));
-    connect(newUiConnection, SIGNAL(signalReceivedAutoRequest(QString,bool)),
-            this, SLOT(slotForwardEndpointAutoRequest(QString,bool)));
     connect(newUiConnection, SIGNAL(signalDeleteEndpoint(QString)), this, SLOT(slotForwardDeleteEndpoint(QString)));
     connect(newUiConnection, SIGNAL(signalDeleteSchedule(QString,int)), this, SLOT(slotForwardEndpointDeleteSchedule(QString,int)));
 }
 
 void HomeAutomationController::addEndpoint(QTcpSocket* socket, QString alias, QString type, QString MAC) {
     Endpoint* newEndpoint = new Endpoint(socket, alias, type, MAC);
-    this->endpoints.append(newEndpoint);
-    this->mapMacToEndpoint.insert(MAC, newEndpoint);
+    //this->endpoints.append(newEndpoint);
+    //this->mapMacToEndpoint.insert(MAC, newEndpoint);
     newEndpoint->ackIdentification();
-    ss->setEndpoints(this->endpoints);
     ps->addEndpoint(newEndpoint);
+    ss->setEndpoints(ps->getEndpoints());
 }
 
 
@@ -193,59 +178,19 @@ void HomeAutomationController::deInitialize()
 
 void HomeAutomationController::slotUpdateUis() {
     foreach(UiConnection* uiConnection, this->uiConnections) {
-        uiConnection->sendUpdate(this->endpoints);        
-    }
-}
-
-void HomeAutomationController::slotForwardStateChangeRequest(QString MAC, bool state) {
-    cout<<"Sending switch-";
-    if(state)
-        cout<<"on";
-    else
-        cout<<"off";
-    cout<<"message to endpoint\n"<<MAC.toStdString()<<"\n";
-
-    if (this->mapMacToEndpoint.contains(MAC)) {
-        //Endpoint exists --> get Pointer at it
-        Endpoint* endpoint = this->mapMacToEndpoint.value(MAC);
-        endpoint->requestState(state);
-    }else {
-        qDebug()<<__FUNCTION__<<"Invalid MAC-Adress";
-    }
-}
-
-void HomeAutomationController::slotForwardEndpointSchedule(QString MAC, ScheduleEvent* event)
-{
-    Endpoint* endpoint = this->mapMacToEndpoint.value(MAC);
-    if(endpoint != NULL) {
-        endpoint->updateScheduleEvent(event);
-    }
-}
-
-void HomeAutomationController::slotForwardEndpointAutoRequest(QString MAC, bool autoMode)
-{
-    Endpoint* endpoint = this->mapMacToEndpoint.value(MAC);
-    if(endpoint != NULL) {
-        endpoint->setAuto(autoMode);
+        uiConnection->sendUpdate(ps->getEndpoints());
     }
 }
 
 void HomeAutomationController::slotForwardDeleteEndpoint(QString mac)
 {
-    Endpoint* endpoint = this->mapMacToEndpoint.value(mac);
-    if  (endpoint != NULL) {
-        if (!endpoint->isConnected()) {
-            this->endpoints.removeOne(endpoint);
-            this->mapMacToEndpoint.remove(mac);
-            ss->setEndpoints(this->endpoints);
-            ps->deleteEndpoint(mac);
-        }
-    }
+    ps->deleteEndpoint(mac);
+    //ToDo disconnect signals
 }
 
 void HomeAutomationController::slotForwardEndpointDeleteSchedule(QString mac, int id)
 {
-    Endpoint* endpoint = this->mapMacToEndpoint.value(mac);
+    Endpoint* endpoint = ps->getEndpointByMac(mac);
     if(endpoint != NULL) {
         endpoint->removeSchedule(id);
     }

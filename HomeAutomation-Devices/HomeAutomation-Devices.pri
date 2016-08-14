@@ -1,6 +1,6 @@
 
-INCLUDEPATH +=  ../HomeAutomation-Devices \
-                ../HomeAutomation-Network \
+INCLUDEPATH +=  ../HomeAutomation-Devices
+
 
 
 SOURCES += \

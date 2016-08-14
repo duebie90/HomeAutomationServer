@@ -4,7 +4,9 @@
 #include <QObject>
 #include <messagetype.h>
 #include <QtNetwork>
-#include <ScheduleEvent.h>
+#include <../HomeAutomation-Devices/ScheduleEvent.h>
+
+class ScheduleEvent;
 
 /* Diese Klasse stellt einen Protokoll Parser dar.
  * Sie erkennt den Typ der Nachricht und überprüft die Korrekte Form aufgrund des
