@@ -14,7 +14,7 @@ public:
     void deInitiate();
     bool addEndpoint(Endpoint* endpoint);
     QList<QString> getEndpointNames();
-    //loads endpoint infos from DB
+    //recover endpoint generell information as well as schedules from DB
     QList<Endpoint*> loadEndpoints();
     //returns the endpoints-pointer-list
     QList<Endpoint *> getEndpoints();
@@ -22,6 +22,8 @@ public:
     Endpoint* getEndpointByMac(QString mac);
     bool deleteEndpoint(QString mac);
     void deleteEndpointsDatabase();
+
+    void updateEndpointSchedule(QString mac, ScheduleEvent* event);
 signals:
 
 public slots:
@@ -34,6 +36,7 @@ private:
     static PersistanceService* _instance;
     bool prepareSchedulesDb();
     bool isEndpointTablePresent();
+    bool isSchedulesTablePresent();
     bool isTablePresent(QString tableName);
     int  getEndpointCount();
     QSqlDatabase schedulesDb;

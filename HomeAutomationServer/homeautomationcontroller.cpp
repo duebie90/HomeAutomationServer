@@ -41,10 +41,7 @@ HomeAutomationController::HomeAutomationController(QObject *parent):
     //Recover endpoint information from database
     QList<Endpoint*> recoveredEndpoints = ps->loadEndpoints();
     if (recoveredEndpoints.length() > 0) {
-        cout<<"Recovered "<<recoveredEndpoints.length()<<" endpoint-information from database\n";
-        foreach(Endpoint* endpoint, recoveredEndpoints) {
-            ps->addEndpoint(endpoint);
-        }
+        cout<<"Recovered "<<recoveredEndpoints.length()<<" endpoint-information from database\n";        
     }
     ss->setEndpoints(ps->getEndpoints());
 }

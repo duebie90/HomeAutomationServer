@@ -116,5 +116,6 @@ private:
 
 };
  Q_DECLARE_METATYPE(ScheduleEvent)
-
+ Q_DECLARE_METATYPE(ScheduleEvent::ScheduleEventType)
+ Q_DECLARE_METATYPE(ScheduleEvent::RepetitionType)
 #endif // SCHEDULEEVENT_H

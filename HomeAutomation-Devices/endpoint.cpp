@@ -1,5 +1,9 @@
 #include "endpoint.h"
 
+class PersistanceService;
+
+#include <../HomeAutomation-Services/PersistanceService.h>
+
 Endpoint::Endpoint(QTcpSocket* socket, QString alias, QString type, QString MAC, QObject* parent):
     QObject(parent)
 {
@@ -115,6 +119,11 @@ QMap<int, ScheduleEvent*> Endpoint::getScheduledEvents()
     return this->scheduleEvents;
 }
 
+void Endpoint::addScheduleEvent(ScheduleEvent *event)
+{
+    this->scheduleEvents.insert(event->getId(), event);
+}
+
 void Endpoint::updateScheduleEvent(ScheduleEvent* event)
 {
     if (this->scheduleEvents.contains(event->getId())) {
@@ -134,7 +143,9 @@ void Endpoint::updateScheduleEvent(ScheduleEvent* event)
     } else {
         cout<<"Endpoint "<<getMAC().toStdString()<<" : Error inserting schedule event\n";
         cout<<"Id"<<event->getId()<<" is invalid";
+        return;
     }
+    PersistanceService::getInstance()->updateEndpointSchedule(getMAC(),event);
     emit signalSchedulesChanged();
 }
 

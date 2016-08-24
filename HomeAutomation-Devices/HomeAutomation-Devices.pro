@@ -5,7 +5,7 @@
 #-------------------------------------------------
 
 QT       -= gui
-QT       += core network
+QT       += core network sql
 TARGET = HomeAutomation-Devices
 TEMPLATE = lib
 CONFIG += staticlib

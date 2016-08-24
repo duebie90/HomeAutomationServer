@@ -33,6 +33,7 @@ public:
     void sendMessage(MessageType type, QByteArray message);
     QMap<int, ScheduleEvent*> getScheduledEvents();
     //is used to either update or add a new event
+    void addScheduleEvent(ScheduleEvent* event);
     void updateScheduleEvent(ScheduleEvent* event);
     void removeSchedule(int id);
     enum EndpointType {
