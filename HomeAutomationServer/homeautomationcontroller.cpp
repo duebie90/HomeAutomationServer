@@ -91,14 +91,12 @@ void HomeAutomationController::slotProcessMessageNewEndpoint(QTcpSocket* socket,
 
             Endpoint* reconnectedEndpoint;
             reconnectedEndpoint = ps->getEndpointByMac(MAC);
-            if (reconnectedEndpoint->getAlias() == alias) {
-                reconnectedEndpoint->updateSocket(socket);
-                reconnectedEndpoint->ackIdentification();
-                //dequeue unIdentified socket
-                tcpServer->clientIdentified(socket);
-            } else {
-                cout<<"But alias information is different. It is therefore declined\n";
-            }
+            reconnectedEndpoint->setAlias(alias);
+            reconnectedEndpoint->updateSocket(socket);
+            reconnectedEndpoint->ackIdentification();
+            //dequeue unIdentified socket
+            tcpServer->clientIdentified(socket);
+
         } else {
             addEndpoint(socket, alias, type, MAC);
             tcpServer->clientIdentified(socket);
@@ -113,7 +111,7 @@ void HomeAutomationController::slotProcessMessageNewEndpoint(QTcpSocket* socket,
 }
 
 void HomeAutomationController::slotProcessMessageNewUi(QTcpSocket* socket, QString alias, QString pass, QString MAC) {
-    cout<<"HaC: Ui Controller recognized\n";
+    cout<<"Ui Controller recognized\n";
     //checking password also contained in this message
     if (alias != "" && pass!="" && MAC != "") {
         bool passwordCorrect = (pass == this->pwd);

@@ -22,6 +22,7 @@ public:
     bool isConnected();
     void setConnected(bool connected);
     QString getAlias();
+    void setAlias(QString newAlias);
     QString getType();
     QString getMAC();
     void setState(bool state);

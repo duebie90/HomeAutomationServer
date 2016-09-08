@@ -193,6 +193,11 @@ void Endpoint::setConnected(bool connected){
 QString Endpoint::getAlias() {
     return alias;
 }
+
+void Endpoint::setAlias(QString newAlias)
+{
+    this->alias = newAlias;
+}
 QString Endpoint::getType() {
     return type;
 }
