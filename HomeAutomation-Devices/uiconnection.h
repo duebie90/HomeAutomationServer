@@ -19,6 +19,7 @@ public:
     void sendUpdate(QList<Endpoint*> endpoints);
     void sendEndpointSchedulesUpdate(QString mac, QList<ScheduleEvent*> schedules);
     QHostAddress getIp();
+    void ackIdentification();
 private slots:  
     void slotDisconnected();
     void slotReceivedUiEndpointStateRequest(QString MAC, bool state);

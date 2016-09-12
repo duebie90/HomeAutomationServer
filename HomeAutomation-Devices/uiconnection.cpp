@@ -129,6 +129,13 @@ QHostAddress UiConnection::getIp()
     return this->clientSocket->peerAddress();
 }
 
+void UiConnection::ackIdentification()
+{
+    QByteArray payload;
+    //empty payload
+    this->dataTransmitter->sendMessage(MESSAGETYPE_UI_INFO_ACK, payload);
+}
+
 void UiConnection::slotDisconnected() {
     cout<<"Client Disconnected\n";
     this->connected = false;

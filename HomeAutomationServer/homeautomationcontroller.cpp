@@ -133,6 +133,7 @@ void HomeAutomationController::addUiConnection(QTcpSocket* socket, QString alias
 
     UiConnection* newUiConnection = new UiConnection(socket, alias);
     uiConnections.append(newUiConnection);
+    newUiConnection->ackIdentification();
     //dequeue unIdentified socket
     tcpServer->clientIdentified(socket);
     //connect signals
