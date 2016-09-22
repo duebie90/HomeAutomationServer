@@ -7,6 +7,8 @@
 //#include <QNetworkConfigurationManager>
 //#include <QTcpSocket>
 
+const int IDENTIFICATION_TIMEOUT_MS = 1000;
+
 #include <iostream>
 using namespace std;
 
@@ -34,18 +36,23 @@ TcpServer::TcpServer(QString address, int port, QObject *parent):
 
 TcpServer::~TcpServer() {
     clientSockets.clear();
-    clientsPendingIdentification.clear();
+    mapClientsPendingIdentificationToDisconnectTimers.clear();
 }
 
 void TcpServer::resetClientsPendingIdentification()
 {
-    this->clientsPendingIdentification.clear();
+    this->mapClientsPendingIdentificationToDisconnectTimers.clear();
 }
 
 void TcpServer::clientIdentified(QTcpSocket *client)
 {
     disconnect(client, SIGNAL(readyRead()), this, SLOT(slotReceivedData()));
-    this->clientsPendingIdentification.removeOne(client);
+    QTimer* disconnectTimer = mapClientsPendingIdentificationToDisconnectTimers.value(client);
+    if (disconnectTimer != NULL) {
+        connect(disconnectTimer, SIGNAL(timeout()), this, SLOT(slotDisconnectTimeout()));
+        disconnectTimer->deleteLater();
+    }
+    this->mapClientsPendingIdentificationToDisconnectTimers.remove(client);
 }
 
 void TcpServer::slotNetworkSessionOpened() {
@@ -69,9 +76,16 @@ void TcpServer::slotClientConnected() {
     cout<<"A Client with IP "<<remoteAddress.toString().toStdString()<<" connected.\n";
 
     //we don't now who this is yet
-    this->clientsPendingIdentification.append(clientSocket);
+    QTimer* disconnectTimer = new QTimer();
+    disconnectTimer->setSingleShot(true);
+    disconnectTimer->setInterval(IDENTIFICATION_TIMEOUT_MS);
+
+    this->mapClientsPendingIdentificationToDisconnectTimers.insert(clientSocket, disconnectTimer);
     //so we wait for him to send an identification message
     connect(clientSocket, SIGNAL(readyRead()), this, SLOT(slotReceivedData()));
+    //or the disconnect timer to trigger
+    connect(disconnectTimer, SIGNAL(timeout()), this, SLOT(slotDisconnectTimeout()));
+    disconnectTimer->start();
     //but we let him now who we are
     //ToDo send server info
 
@@ -86,6 +100,23 @@ void TcpServer::slotReceivedData()
     QTcpSocket* senderSocket = (QTcpSocket*)QObject::sender();
     QByteArray data = senderSocket->readAll();
     processProtocollHeader(senderSocket, data);
+}
+
+void TcpServer::slotDisconnectTimeout()
+{
+    QTimer* senderTimer = qobject_cast<QTimer*>(QObject::sender());
+     qDebug()<<"disconnected Timeout occured";
+    if (senderTimer != NULL) {
+        QTcpSocket* socketToDisconnect = mapClientsPendingIdentificationToDisconnectTimers.key(senderTimer);
+        if (socketToDisconnect != NULL) {
+            socketToDisconnect->disconnect();
+            socketToDisconnect->deleteLater();
+            mapClientsPendingIdentificationToDisconnectTimers.remove(socketToDisconnect);
+            QString address = socketToDisconnect->peerAddress().toString();
+            qDebug()<<"disconnected and remove TCPSocket IP: "<<address;
+
+        }
+    }
 }
 
 int TcpServer::processProtocollHeader(QTcpSocket *socket, QByteArray data)

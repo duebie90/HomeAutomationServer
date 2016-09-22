@@ -22,6 +22,7 @@ private slots:
     void slotClientConnected();
     void slotAcceptError();       
     void slotReceivedData();
+    void slotDisconnectTimeout();
 signals:
     void signalClientConnected(QTcpSocket *client);
     //Signal forwarded from DataReceiver to HomeAutomationController
@@ -38,7 +39,7 @@ private:
     qint16 serverPort;
     //Recently connected clients:
     //We wait for them to send their identification before they are visualized
-    QList<QTcpSocket*> clientsPendingIdentification;
+    QMap<QTcpSocket*, QTimer*> mapClientsPendingIdentificationToDisconnectTimers;
 
 
 };
