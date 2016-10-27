@@ -10,6 +10,8 @@
 #include <EndpointDataTransmitter.h>
 #include <ScheduleEvent.h>
 
+//Timeout for next keep alive messages
+const int KEEP_ALIVE_TIMEOUT_MS = 5000;
 
 using namespace std;
 class Endpoint: public QObject
@@ -37,6 +39,7 @@ public:
     void addScheduleEvent(ScheduleEvent* event);
     void updateScheduleEvent(ScheduleEvent* event);
     void removeSchedule(int id);
+    bool isStateChangePending();
     enum EndpointType {
         //those are example
         switchbox,
@@ -57,7 +60,7 @@ private slots:
     void slotStateRequested(bool state);
 
     void slotSocketError(QAbstractSocket::SocketError socketError);
-
+    void slotKeepAliveTimeout();
 private:
     void receivedData();
     QString alias;
@@ -71,10 +74,16 @@ private:
     bool state;
     //state which was requested: manually or automatically
     bool requestedState;
+
+    bool stateChangePending;
+
     bool autoControlled;
     //state which was there if auto-controlled
     bool autoControlledState;
 
+    //This timer is started if after each received state (equals keep Alive heartbeat)
+    //if it triggers this endpoint eappears to be disconnected and the socket is closed
+    QTimer* keepAliveTimeoutTimer;
 
     QMap<int, ScheduleEvent*> scheduleEvents;
 };

@@ -26,15 +26,18 @@ int EndpointDataReceiver::processProtocollHeader(QTcpSocket* socket, QByteArray 
     MessageType messageType;
     quint16 payloadLength=0;
 
+
     //check if StartOfHeader Code is at(0)
     if (data.at(0) != 0x01) {
         cout<<"Received invalid message from "<<socket->peerAddress().toString().toStdString()<<"\n";
+        cout<<"message-data: "<<data.toHex().toStdString()<<"\n";
+        cout<<"Reason: missing 0x01 at index 0\n";
         return -1;
     }
     messageType = (MessageType)data.at(1); //second Byte
     QByteArray lengthBytes= data.mid(2,2);
 
-    if(lengthBytes.at(0) != -1) {
+    if(lengthBytes.at(0) != -1 && lengthBytes.at(0) != 0xFF) {
         //0xFF stands for 0x00, 0 makes trouble in c strings
         payloadLength |= (quint8)(lengthBytes.at(0));
     }
@@ -48,6 +51,8 @@ int EndpointDataReceiver::processProtocollHeader(QTcpSocket* socket, QByteArray 
         splitOfPayload = messageParts.at(1);
     } else {
         cout<<"Received invalid message from "<<socket->peerAddress().toString().toStdString()<<"\n";
+       cout<<"message-data: "<<data.toHex().toStdString()<<"\n";
+        cout<<"Reason: 0x02 at end of header missing or no payload present\n";
         return -2;
     }
     if (messageType != MESSAGETYPE_ENDPOINT_SCHEDULE) {
@@ -55,6 +60,8 @@ int EndpointDataReceiver::processProtocollHeader(QTcpSocket* socket, QByteArray 
         //check payload length
         if (payload.length() != payloadLength) {
             cout<<"Received invalid message from "<<socket->peerAddress().toString().toStdString()<<"\n";
+            cout<<"message-data: "<<data.toHex().toStdString()<<"\n";
+            cout<<"Reason: message type "<<messageType<<": payload length from header "<<payloadLength<<" different from actual length: "<<payload.length()<<".\n";
             return -3;
         }
     } else {
@@ -65,6 +72,8 @@ int EndpointDataReceiver::processProtocollHeader(QTcpSocket* socket, QByteArray 
     if (termination.length() >= 2 )
         if(termination.at(0) != 0x03 || termination.at(1) != 0x04 ) {
             cout<<"Received invalid message from "<<socket->peerAddress().toString().toStdString();
+            cout<<"message-data: "<<data.toHex().toStdString()<<"\n";
+            cout<<"Reason termination malformed: "<<termination.toStdString()<<"\n";
             return -4;
         }
     cout<<"Received message from "<<socket->peerAddress().toString().toStdString()<<" Type: "<<messageType<<"\n";

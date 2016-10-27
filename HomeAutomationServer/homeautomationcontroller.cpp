@@ -111,7 +111,7 @@ void HomeAutomationController::slotProcessMessageNewEndpoint(QTcpSocket* socket,
 }
 
 void HomeAutomationController::slotProcessMessageNewUi(QTcpSocket* socket, QString alias, QString pass, QString MAC) {
-    cout<<"Ui Controller recognized\n";
+    cout<<__FUNCTION__<<"Ui Controller recognized\n";
     //checking password also contained in this message
     if (alias != "" && pass!="" && MAC != "") {
         bool passwordCorrect = (pass == this->pwd);
@@ -130,17 +130,21 @@ void HomeAutomationController::slotProcessMessageNewUi(QTcpSocket* socket, QStri
 }
 
 void HomeAutomationController::addUiConnection(QTcpSocket* socket, QString alias) {
-
+    cout<<__FUNCTION__<<"\n";
     UiConnection* newUiConnection = new UiConnection(socket, alias);
-    uiConnections.append(newUiConnection);
-    newUiConnection->ackIdentification();
-    //dequeue unIdentified socket
-    tcpServer->clientIdentified(socket);
     //connect signals
     connect(newUiConnection, SIGNAL(signalResetServer()), this, SLOT(slotResetServer()));
     connect(newUiConnection, SIGNAL(signalDisconnected()), this, SLOT(slotUiDisconnected()));
     connect(newUiConnection, SIGNAL(signalDeleteEndpoint(QString)), this, SLOT(slotForwardDeleteEndpoint(QString)));
     connect(newUiConnection, SIGNAL(signalDeleteSchedule(QString,int)), this, SLOT(slotForwardEndpointDeleteSchedule(QString,int)));
+    cout<<__FUNCTION__<<"newUiConnection =="<<newUiConnection<<"\n";
+    newUiConnection->ackIdentification();
+
+    uiConnections.append(newUiConnection);
+
+    //uiConnections.last()->ackIdentification();
+    //dequeue unIdentified socket
+    tcpServer->clientIdentified(socket);
 }
 
 void HomeAutomationController::addEndpoint(QTcpSocket* socket, QString alias, QString type, QString MAC) {

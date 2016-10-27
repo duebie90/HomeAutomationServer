@@ -18,6 +18,7 @@ Endpoint::Endpoint(QTcpSocket* socket, QString alias, QString type, QString MAC,
     this->dataTransmitter = new EndpointDataTransmitter(socket);
     this->autoControlled = false;
     this->autoControlledState = false;
+    this->stateChangePending = false;
     if(clientSocket != NULL) {
         connect(clientSocket, SIGNAL(readyRead()), dataReceiver, SLOT(slotReceivedData()));
         connect(clientSocket, SIGNAL(disconnected()), this, SLOT(slotDisconnected()));
@@ -30,8 +31,10 @@ Endpoint::Endpoint(QTcpSocket* socket, QString alias, QString type, QString MAC,
             SLOT(slotReceivedIdentMessage(QTcpSocket*,QString,QString,QString)));
     this->connected = true;
 
-
-
+    this->keepAliveTimeoutTimer = new QTimer();
+    this->keepAliveTimeoutTimer->setInterval(KEEP_ALIVE_TIMEOUT_MS);
+    this->keepAliveTimeoutTimer->setSingleShot(true);
+    connect(this->keepAliveTimeoutTimer, SIGNAL(timeout()), this, SLOT(slotKeepAliveTimeout()));
 }
 
 Endpoint::~Endpoint() {
@@ -45,16 +48,17 @@ Endpoint::~Endpoint() {
     delete clientSocket;
 }
 
-void Endpoint::slotReceivedState(QString MAC, bool state) {
-    qDebug()<<__FUNCTION__<<"new State= "<<state;
+void Endpoint::slotReceivedState(QString MAC, bool state) {    
+    qDebug()<<__FUNCTION__<<"new State= "<<state;    
     if(MAC == this->MAC) {
+        this->stateChangePending = false;
+        this->keepAliveTimeoutTimer->stop();
+        this->keepAliveTimeoutTimer->start();
         setState(state);
     }
 }
 
 void Endpoint::slotStateRequested(bool state) {
-
-
 
 
 }
@@ -71,7 +75,16 @@ void Endpoint::slotSocketError(QAbstractSocket::SocketError socketError)
      default:
         cout<<"Endpoint " + getAlias().toStdString() + "Socket Error: \n";
         break;
-     }
+    }
+}
+
+void Endpoint::slotKeepAliveTimeout()
+{
+  cout<<"Endpoint "<<getAlias().toStdString()<<" disconnected. (Timeout)\n";
+  setConnected(false);
+  if(this->clientSocket != NULL ) {
+    this->clientSocket->close();
+  }
 }
 
 void Endpoint::slotPerformEvent(ScheduleEvent *event)
@@ -158,6 +171,11 @@ void Endpoint::removeSchedule(int id)
     emit signalSchedulesChanged();
 }
 
+bool Endpoint::isStateChangePending()
+{
+    return this->stateChangePending;
+}
+
 void Endpoint::slotDisconnected() {
     cout<<__FUNCTION__<<" Alias "<<this->alias.toStdString()<<"\n";
     this->connected = false;
@@ -181,6 +199,7 @@ void Endpoint::updateSocket(QTcpSocket* newSocket) {
         //now try to send request again
         requestState(requestedState);
     }
+    this->keepAliveTimeoutTimer->start();
 }
 
 bool Endpoint::isConnected() {
@@ -188,6 +207,9 @@ bool Endpoint::isConnected() {
 }
 void Endpoint::setConnected(bool connected){
     this->connected = connected;
+    if(connected) {
+        this->keepAliveTimeoutTimer->start();
+    }
 }
 
 QString Endpoint::getAlias() {
@@ -241,6 +263,7 @@ void Endpoint::requestState(bool state){
        //the local state is not changed
        //instead we wait for an update
        this->dataTransmitter->sendStateRequest(getMAC(), state);
+       this->stateChangePending =true;
     }else  {
         //Not connected at the moment
         //state change request will be send once endpoint reconnected (updateSocket())

@@ -3,7 +3,7 @@
 
 #define PDU_DELIMITER 0x1F
 
-enum MessageType{
+enum MessageType:unsigned int{
     MESSAGETYPE_ENDPOINT_IDENT = 0x21,      //Identification endpoint -->server
     MESSAGETYPE_ENDPOINT_IDENT_ACK = 0x22,         //Identification ACK server --> endpoint
     MESSAGETYPE_ENDPOINT_STATE = 0x23,             //State update endpoint --> server

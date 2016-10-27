@@ -107,6 +107,8 @@ void UiConnection::sendEndpointStatesUpdate(QList<Endpoint *> endpoints)
         payload.append(PDU_DELIMITER);
         bool autoControlled = endpoint->isAutoControlled();
         payload.append(autoControlled ? "1": "0");
+        payload.append(PDU_DELIMITER);
+        payload.append(endpoint->isStateChangePending() ? "1": "0");
     }
     this->dataTransmitter->sendMessage(MESSAGETYPE_ENDPOINTS_STATES_LIST, payload);
 }
@@ -131,6 +133,7 @@ QHostAddress UiConnection::getIp()
 
 void UiConnection::ackIdentification()
 {
+    cout<<__FUNCTION__<<"\n";
     QByteArray payload;
     //empty payload
     this->dataTransmitter->sendMessage(MESSAGETYPE_UI_INFO_ACK, payload);
