@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+ <title>Haussteuerung-Webinterface</title>
+ <meta name="viewport" content="width=device-width, initial-scale=1">
+ <link rel="stylesheet" href="Hausautomation/w3.css">
+ <link rel="stylesheet" href="Hausautomation/styles.css">
+ <script type="text/javascript" src="Hausautomation/WebUiMessageParser.js"> </script>
+
+</head>
+<body onload="initWebSocket(internalWsUri)">
+<div class="w3-sidenav w3-collapse w3-card-2 w3-animate-left sidenav" style="width:200px" id="sidenav">
+ <a href="javascript:void(0)" onclick="w3_close()"
+    class="w3-closenav w3-large w3-hide-large">Close &times;</a>
+ <a href="#" class="w3-large" onclick="w3_close()" >HOME</a>
+ <hr>
+ <div id="endpointsNav" >
+
+
+ </div>
+</div>
+
+<div class="w3-main main" style="margin-left:200px; height:100%">
+
+ <div class="w3-container header" >
+  <!--<span class="w3-opennav w3-xlarge w3-hide-large" onclick="w3_open()">&#9776;</span>-->
+
+  <span class="w3-opennav w3-xlarge w3-hide-large" id="burgerButton" onclick="w3_open()">&equiv;</span>
+
+
+
+  <div id="masterheadline"><h1 class="w3-text-shadow">Haussteuerung</h1>
+
+   <b><span id="statusMessage" class="w3-text-indigo">Server verbinden... &nbsp; &nbsp; &nbsp;</span></b><span id="reconnectButton" style="visibility: hidden"><a href="#" onClick="reconnect()" >neu Verbinden</a></span>
+  </div>
+
+ </div>
+
+ <div class="w3-container content" id="main">
+  <h3>Warte auf Serveverbindung. Informationen werden geladen...</h3>
+
+
+ </div>
+
+ <div class="w3-container footer" >
+  <div class="version">WebUi HeimAutomation -- Version 0.1</code></div>
+  <!--<textarea id="debugTextArea" ></textarea>w3-container-->
+ </div>
+
+</div>
+<script type="text/javascript" src="Hausautomation/WebUi.js"> </script>
+<script src="Hausautomation/w3js.js"></script>
+</body>
+</html>
