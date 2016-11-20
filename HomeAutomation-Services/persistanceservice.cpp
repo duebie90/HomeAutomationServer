@@ -2,7 +2,6 @@
 #include <QtSql>
 #include <QDebug>
 #include <QDir>
-#include <homeautomationcontroller.h>
 
 PersistanceService* PersistanceService::_instance = NULL;
 
@@ -53,7 +52,7 @@ QList<Endpoint *> PersistanceService::loadEndpoints()
         cout<<"Error: database not ready. Settings will be lost after restart or power loss.\n";
         return endpoints;
     }
-    query.prepare("SELECT id, name, macAdress, endpointType FROM endpoints");
+    query.prepare("SELECT id, name, macAdress, endpointType, endpointState, endpointRequestedState, autoState FROM endpoints");
     if(!query.exec() ) {
         qDebug()<<"Error while getting endpoint information from database.";
         qDebug()<<"Last DB Error: "<<query.lastError();
@@ -62,12 +61,18 @@ QList<Endpoint *> PersistanceService::loadEndpoints()
     int nameIndex = query.record().indexOf("name");
     int macIndex = query.record().indexOf("macAdress");
     int typeIndex = query.record().indexOf("endpointType");
+    int stateIndex = query.record().indexOf("endpointState");
+    int requestedStateIndex = query.record().indexOf("endpointRequestedState");
+    int autoIndex = query.record().indexOf("autoState");
     while (query.next()) {
         QString alias = query.value(nameIndex).toString();
         QString type = query.value(typeIndex).toString();
-        QString macAddress = query.value(macIndex).toString();
+        QString macAddress = query.value(macIndex).toString();        
         Endpoint * newEndpoint = new Endpoint(NULL, alias, type, macAddress);
         newEndpoint->setConnected(false);
+        newEndpoint->setState(query.value(stateIndex).toBool());
+        newEndpoint->requestState(query.value(requestedStateIndex).toBool());
+        newEndpoint->setAuto(query.value(autoIndex).toBool());
         endpoints.append(newEndpoint);
     }
     //
@@ -89,8 +94,7 @@ QList<Endpoint *> PersistanceService::loadEndpoints()
         int repetitionIndex = ScheduleQuery.record().indexOf("repetition");        
         int pendingTypeIndex = ScheduleQuery.record().indexOf("pendingEventType");
         int moIndex = ScheduleQuery.record().indexOf("mo");
-        int tuIndex = ScheduleQuery.record().indexOf("tu");
-        int soIndex = ScheduleQuery.record().indexOf("so");
+        int tuIndex = ScheduleQuery.record().indexOf("tu");        
 
         while (ScheduleQuery.next()) {
             int id= ScheduleQuery.value(idIndex).toInt();
@@ -150,12 +154,18 @@ bool PersistanceService::addEndpoint(Endpoint *endpoint) {
     QString name = endpoint->getAlias();
     QString MAC  = endpoint->getMAC();
     QString type = endpoint->getType();
+    bool state =  endpoint->getState();
+    bool requestedState = endpoint->getRequestedState();
+    bool autoState      = endpoint->isAutoControlled();
     QSqlQuery query;
-    query.prepare("INSERT INTO endpoints (id, name, macAdress, endpointType) VALUES (:id, :name, :mac, :type)");
+    query.prepare("INSERT INTO endpoints (id, name, macAdress, endpointType, endpointState, endpointRequestedState, autoState) VALUES (:id, :name, :mac, :type, :state, :requestedState, :autoState)");
     query.bindValue(":id", id);
     query.bindValue(":name", name);
     query.bindValue(":mac", MAC);
     query.bindValue(":type", type);
+    query.bindValue(":state", QVariant::fromValue(state));
+    query.bindValue(":requestedState", QVariant::fromValue(requestedState));
+    query.bindValue(":autoState", QVariant::fromValue(autoState));
     if(!query.exec() ) {
         qDebug()<<"Error while sql query";
         qDebug()<<"Last DB Error: "<<query.lastError();
@@ -163,6 +173,8 @@ bool PersistanceService::addEndpoint(Endpoint *endpoint) {
     }
     return true;
 }
+
+
 
 QList<Endpoint *> PersistanceService::getEndpoints()
 {
@@ -316,6 +328,53 @@ void PersistanceService::updateEndpointSchedule(QString mac, ScheduleEvent *even
 
 }
 
+void PersistanceService::updateEndpoint(Endpoint *endpoint)
+{
+    QSqlQuery query;
+    if (!databaseReady) {
+        cout<<"Error: database not ready. Settings will be lost after restart or power loss.\n";
+        return;
+    }
+    query.prepare("SELECT macAdress FROM endpoints WHERE macAdress == :mac");
+    query.bindValue(":mac", endpoint->getMAC());
+    if(!query.exec() ) {
+        qDebug()<<"Error while getting endpoint information from database.";
+        qDebug()<<"Last DB Error: "<<query.lastError();
+        return;
+    }
+    //determine number of entries
+    //query.size won't work on that DB
+    int rowCount = 0;
+    while(query.next()) {
+        rowCount++;
+    }
+
+    if( rowCount == 0 ) {
+        //the endpoint does not seem to exist so add a new one
+        addEndpoint(endpoint);
+    } else if(rowCount == 1){
+        int id = getEndpointCount();
+        QString name = endpoint->getAlias();
+        QString MAC  = endpoint->getMAC();
+        QString type = endpoint->getType();
+        bool state =  endpoint->getState();
+        bool requestedState = endpoint->getRequestedState();
+        bool autoState = endpoint->isAutoControlled();
+        QSqlQuery query;
+        query.prepare("UPDATE endpoints SET name = :name, endpointState = :state, endpointRequestedState =:requestedState, autoState =:autoState WHERE macAdress == :mac");
+        query.bindValue(":name", name);
+        query.bindValue(":mac", MAC);
+        query.bindValue(":state", QVariant::fromValue(state));
+        query.bindValue(":requestedState", QVariant::fromValue(requestedState));
+        query.bindValue(":autoState", QVariant::fromValue(autoState));
+        if(!query.exec() ) {
+            qDebug()<<"Error while updating endpoint information in database.";
+            qDebug()<<"Last DB Error: "<<query.lastError();
+            return;
+        }
+    }
+}
+
 void PersistanceService::slotOpenDatabase()
 {
 
@@ -336,7 +395,7 @@ void PersistanceService::slotOpenDatabase()
         createNewDb |=  !isEndpointTablePresent();
         createNewDb |=  !isSchedulesTablePresent();
         if (createNewDb) {
-            if (prepareSchedulesDb()) {
+            if (prepareTables()) {
                 databaseReady = true;
                 cout<<"No existing database found. Create a new one.";
             } else {
@@ -359,12 +418,12 @@ void PersistanceService::slotOpenDatabase()
     }
 }
 
-bool PersistanceService::prepareSchedulesDb()
+bool PersistanceService::prepareTables()
 {
     QSqlQuery query;
     //create empty "names" table for the first use
     //query.prepare("CREATE TABLE names(id integer primary key, name text, mac text, type text");
-    query.prepare("CREATE TABLE endpoints(id integer primary key, name text, macAdress text, endpointType text)");
+    query.prepare("CREATE TABLE endpoints(id integer primary key, name text, macAdress text, endpointType text, endpointState int, endpointRequestedState int, autoState int)");
     if(!query.exec() ) {
         qDebug()<<"Error while sql query";
         qDebug()<<"Last DB Error: "<<query.lastError();
@@ -381,7 +440,7 @@ bool PersistanceService::prepareSchedulesDb()
 }
 bool PersistanceService::isEndpointTablePresent() {
     QSqlQuery query;
-    query.prepare("SELECT id, name, macAdress, endpointType FROM endpoints");
+    query.prepare("SELECT id, name, macAdress, endpointType, endpointState, endpointRequestedState, autoState FROM endpoints");
     if(!query.exec() ) {
         qDebug()<<"Endpoints table does no exist or DB is not ready.\n";
         qDebug()<<"Last DB Error: "<<query.lastError()<<"\n";

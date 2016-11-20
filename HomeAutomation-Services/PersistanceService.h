@@ -2,7 +2,7 @@
 #define PERSISTANCESERVICE_H
 
 #include <QObject>
-#include <QtSql>
+#include <QSqlDatabase>
 #include <endpoint.h>
 #include <QTimer>
 class PersistanceService : public QObject
@@ -18,12 +18,14 @@ public:
     QList<Endpoint*> loadEndpoints();
     //returns the endpoints-pointer-list
     QList<Endpoint *> getEndpoints();
-
+    int  getEndpointCount();
     Endpoint* getEndpointByMac(QString mac);
     bool deleteEndpoint(QString mac);
     void deleteEndpointsDatabase();
 
     void updateEndpointSchedule(QString mac, ScheduleEvent* event);
+
+    void updateEndpoint(Endpoint* endpoint);
 signals:
 
 public slots:
@@ -34,11 +36,10 @@ private:
     ~PersistanceService();
 
     static PersistanceService* _instance;
-    bool prepareSchedulesDb();
+    bool prepareTables();
     bool isEndpointTablePresent();
     bool isSchedulesTablePresent();
     bool isTablePresent(QString tableName);
-    int  getEndpointCount();
     QSqlDatabase schedulesDb;
     bool databaseReady;
     QTimer* retryOpeningDatabaseTimer;

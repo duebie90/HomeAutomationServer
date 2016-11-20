@@ -4,6 +4,8 @@ class PersistanceService;
 
 #include <../HomeAutomation-Services/PersistanceService.h>
 
+#define NO_TIMEOUT (true)
+
 Endpoint::Endpoint(QTcpSocket* socket, QString alias, QString type, QString MAC, QObject* parent):
     QObject(parent)
 {
@@ -49,12 +51,15 @@ Endpoint::~Endpoint() {
 }
 
 void Endpoint::slotReceivedState(QString MAC, bool state) {    
-    qDebug()<<__FUNCTION__<<"new State= "<<state;    
+
+    //qDebug()<<__FUNCTION__<<"new State= "<<state;
+
     if(MAC == this->MAC) {
         this->stateChangePending = false;
         this->keepAliveTimeoutTimer->stop();
         this->keepAliveTimeoutTimer->start();
         setState(state);
+        PersistanceService::getInstance()->updateEndpoint(this);
     }
 }
 
@@ -80,11 +85,13 @@ void Endpoint::slotSocketError(QAbstractSocket::SocketError socketError)
 
 void Endpoint::slotKeepAliveTimeout()
 {
-  cout<<"Endpoint "<<getAlias().toStdString()<<" disconnected. (Timeout)\n";
-  setConnected(false);
-  if(this->clientSocket != NULL ) {
-    this->clientSocket->close();
-  }
+    if(!NO_TIMEOUT) {
+        cout<<"Endpoint "<<getAlias().toStdString()<<" disconnected. (Timeout)\n";
+        setConnected(false);
+        if(this->clientSocket != NULL ) {
+            this->clientSocket->close();
+        }
+    }
 }
 
 void Endpoint::slotPerformEvent(ScheduleEvent *event)
@@ -219,6 +226,7 @@ QString Endpoint::getAlias() {
 void Endpoint::setAlias(QString newAlias)
 {
     this->alias = newAlias;
+    PersistanceService::getInstance()->updateEndpoint(this);
 }
 QString Endpoint::getType() {
     return type;
@@ -227,16 +235,21 @@ QString Endpoint::getMAC() {
     return MAC;
 }
 void Endpoint::setState(bool state) {
-    this->state = state;
-
+    this->state = state;    
 }
 bool Endpoint::getState() {
     return this->state;
 }
 
+bool Endpoint::getRequestedState()
+{
+    return this->requestedState;
+}
+
 void Endpoint::setAuto(bool autoControlled)
 {
     this->autoControlled = autoControlled;
+    PersistanceService::getInstance()->updateEndpoint(this);
     if (autoControlled == true &&
             autoControlledState != requestedState) {
         requestState(this->autoControlledState);
@@ -268,4 +281,5 @@ void Endpoint::requestState(bool state){
         //Not connected at the moment
         //state change request will be send once endpoint reconnected (updateSocket())
     }
+    PersistanceService::getInstance()->updateEndpoint(this);    
 }

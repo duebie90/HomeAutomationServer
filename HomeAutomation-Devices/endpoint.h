@@ -29,6 +29,7 @@ public:
     QString getMAC();
     void setState(bool state);
     bool getState();
+    bool getRequestedState();
     void setAuto(bool autoControlled);
     bool isAutoControlled();
     bool ackIdentification();
