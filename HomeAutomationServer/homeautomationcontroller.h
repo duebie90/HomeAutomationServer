@@ -9,7 +9,7 @@
 #include <UiDataReceiver.h>
 #include <../HomeAutomation-Services/PersistanceService.h>
 #include <SchedulingService.h>
-
+#include <websocketserver.h>
 
 class HomeAutomationController: public QObject
 {
@@ -18,7 +18,8 @@ public:
     static HomeAutomationController *getInstance();
     void initiate();
     void deInitialize();
-
+signals:
+    void signalUpdateWss();
 private slots:
     void slotUpdateUis();
     void slotProcessMessageNewUi(QTcpSocket* socket, QString alias, QString pass, QString MAC);
@@ -58,7 +59,7 @@ private:
     //ToDo create Services Handler
     PersistanceService* ps;
     SchedulingService*  ss;
-
+    WsServer* wss;
     UiConnection* ui2Update;
 
 };

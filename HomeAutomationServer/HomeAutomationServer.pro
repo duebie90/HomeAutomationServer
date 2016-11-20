@@ -1,4 +1,4 @@
-QT += core network sql
+QT += core network sql websockets
 QT -= gui
 
 TARGET = HomeAutomationServer
@@ -11,16 +11,18 @@ SOURCES += main.cpp \
     homeautomationcontroller.cpp \
     inputcontroller.cpp \
     mainapplication.cpp \
-    tcpserver.cpp
+    tcpserver.cpp \
+    websocketserver.cpp
 
 INCLUDEPATH +=  ../HomeAutomation-Services \
                 ../HomeAutomation-Devices \
-                ../HomeAutomation-Network
+                #../HomeAutomation-Network
 
 HEADERS +=  homeautomationcontroller.h \
             inputcontroller.h \
             mainapplication.h \
-            tcpserver.h
+            tcpserver.h \
+    websocketserver.h
 
 RC_FILE =  app.rc
 

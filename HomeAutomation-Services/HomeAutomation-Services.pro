@@ -16,7 +16,7 @@ include(HomeAutomation-Services.pri)
 
 INCLUDEPATH += ../HomeAutomation-Devices \
                 ../HomeAutomation-Network \
-                ../HomeAutomationServer
+                #../HomeAutomationServer
 
 unix {
     target.path = /usr/lib

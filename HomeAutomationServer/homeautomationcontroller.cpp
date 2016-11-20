@@ -7,6 +7,7 @@
 #include <messagetype.h>
 #include <PersistanceService.h>
 #include <SchedulingService.h>
+#include <websocketserver.h>
 
 
 #define tempPassword "fhkiel"
@@ -22,6 +23,9 @@ HomeAutomationController::HomeAutomationController(QObject *parent):
     this->pwd = tempPassword;
     //this->tcpServer = new TcpServer("127.0.0.1", 3000);
     this->tcpServer = new TcpServer("localhost", 3000);
+    this->wss       = new WsServer("localhost", 3001);
+
+    connect(this, SIGNAL(signalUpdateWss()), wss, SLOT(slotUpdateWebUis()));
     //this->dataReceiver = new DataReceiver();
 
     uiUpdateTimer = new QTimer();
@@ -180,6 +184,7 @@ void HomeAutomationController::slotUpdateUis() {
     foreach(UiConnection* uiConnection, this->uiConnections) {
         uiConnection->sendUpdate(ps->getEndpoints());
     }
+    emit signalUpdateWss();
 }
 
 void HomeAutomationController::slotForwardDeleteEndpoint(QString mac)
