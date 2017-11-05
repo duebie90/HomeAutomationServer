@@ -28,6 +28,7 @@ signals:
     void signalReceivedUiIdent(QTcpSocket* socket, QString alias, QString pass, QString MAC);
     void signalDeleteEndpoint();
     void signalResetServer();
+    void signalReceivedHeartbeat();
     //...
 private:
     int processProtocollHeader(QTcpSocket* socket, QByteArray data);

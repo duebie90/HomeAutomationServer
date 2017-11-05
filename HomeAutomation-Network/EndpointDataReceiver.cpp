@@ -116,6 +116,9 @@ void EndpointDataReceiver::processMessage(QTcpSocket* socket, MessageType type, 
         }
         emit signalReceivedEndpointState(MAC, switchedState);
         break;
+    case MESSAGETYPE_TCP_HEARTBEAT:
+        emit signalReceivedHeartbeat();
+        break;
     default:
         qDebug()<<__FUNCTION__<<"Unrecognized MessageType";
     }

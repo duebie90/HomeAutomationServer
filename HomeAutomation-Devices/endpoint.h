@@ -61,6 +61,7 @@ private slots:
     void slotStateRequested(bool state);
 
     void slotSocketError(QAbstractSocket::SocketError socketError);
+    void slotResetTimeout();
     void slotKeepAliveTimeout();
 private:
     void receivedData();

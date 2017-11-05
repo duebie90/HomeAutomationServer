@@ -11,7 +11,7 @@ enum MessageType:unsigned int{
     MESSAGETYPE_ENDPOINT_SCHEDULE,          // ui -> server
     MESSAGETYPE_ENDPOINTS_LIST,             //
     MESSAGETYPE_ENDPOINTS_STATES_LIST,      // server --> ui
-    MESSAGETYPE_ENDPOINTS_SCHEDULES_LIST,   // server -->ui
+    MESSAGETYPE_ENDPOINTS_SCHEDULES_LIST,   // server -->ui    
     MESSAGETYPE_UI_INFO,                    //UI idetification ui -->server
     MESSAGETYPE_UI_INFO_ACK,                //Identification ACK server -->ui
     MESSAGETYPE_UI_ENDPOINT_STATE_REQUEST,  // ui -->server
@@ -20,7 +20,8 @@ enum MessageType:unsigned int{
     MESSAGETYPE_UI_ENDPOINT_AUTO,            //server -->ui
     MESSAGETYPE_UI_DELETE_ENDPOINT,
     MESSAGETYPE_UI_DELETE_SCHEDULE,
-    MESSAGETYPE_RESET_SERVER
+    MESSAGETYPE_RESET_SERVER,
+    MESSAGETYPE_TCP_HEARTBEAT = 0xF0
 
 
 

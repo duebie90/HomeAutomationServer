@@ -31,6 +31,7 @@ Endpoint::Endpoint(QTcpSocket* socket, QString alias, QString type, QString MAC,
     connect(dataReceiver, SIGNAL(signalReceivedEndpointState(QString,bool)), this, SLOT(slotReceivedState(QString,bool)));
     connect(dataReceiver, SIGNAL(signalReceivedEndpointIdent(QTcpSocket*,QString,QString,QString)), this,
             SLOT(slotReceivedIdentMessage(QTcpSocket*,QString,QString,QString)));
+    connect(dataReceiver, SIGNAL(signalReceivedHeartbeat()), this, SLOT(slotResetTimeout()));
     this->connected = true;
 
     this->keepAliveTimeoutTimer = new QTimer();
@@ -56,8 +57,7 @@ void Endpoint::slotReceivedState(QString MAC, bool state) {
 
     if(MAC == this->MAC) {
         this->stateChangePending = false;
-        this->keepAliveTimeoutTimer->stop();
-        this->keepAliveTimeoutTimer->start();
+        slotResetTimeout();
         setState(state);
         PersistanceService::getInstance()->updateEndpoint(this);
     }
@@ -81,6 +81,12 @@ void Endpoint::slotSocketError(QAbstractSocket::SocketError socketError)
         cout<<"Endpoint " + getAlias().toStdString() + "Socket Error: \n";
         break;
     }
+}
+
+void Endpoint::slotResetTimeout()
+{
+    this->keepAliveTimeoutTimer->stop();
+    this->keepAliveTimeoutTimer->start();
 }
 
 void Endpoint::slotKeepAliveTimeout()
