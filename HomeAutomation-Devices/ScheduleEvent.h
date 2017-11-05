@@ -62,7 +62,8 @@ public:
     void setWeekdays(QList<bool> checkedWeekdays);
     QString toString();
 
-    friend QDataStream &ScheduleEvent::operator<<(QDataStream &ds, ScheduleEvent *obj)
+    //friend QDataStream &ScheduleEvent::operator<<(QDataStream &ds, ScheduleEvent *obj)
+    friend QDataStream &operator<<(QDataStream &ds, ScheduleEvent *obj)
     {
        ds<<(qint16)obj->getId();
        ds<<obj->getDate();
@@ -73,7 +74,8 @@ public:
        ds<<obj->weekdays;
        return ds;
     }
-    friend QDataStream &ScheduleEvent::operator>>(QDataStream &in,ScheduleEvent *sEvent)
+    //friend QDataStream &ScheduleEvent::operator>>(QDataStream &in,ScheduleEvent *sEvent)
+    friend QDataStream &operator>>(QDataStream &in,ScheduleEvent *sEvent)
     {
        qint16 id;
        QDate date;

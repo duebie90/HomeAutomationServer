@@ -38,6 +38,14 @@ void WebUiClient::updateWebUi(QList<Endpoint *> endpoints)
         jObj.insert("mac", QJsonValue(endpoint->getMAC()));
         jObj.insert("alias", QJsonValue(endpoint->getAlias()));
         jObj.insert("state", QJsonValue(endpoint->getState()));
+        jObj.insert("autoState", QJsonValue(endpoint->isAutoControlled()));
+        jObj.insert("connectedState", QJsonValue(endpoint->isConnected()));
+        QJsonArray scheduleStringsArray;
+        foreach(ScheduleEvent* event, endpoint->getScheduledEvents().values()) {
+            //QJsonObject scheduleJObj;
+            scheduleStringsArray<<QJsonValue(event->toString());
+        }
+        jObj.insert("scheduleStrings", QJsonValue(scheduleStringsArray));
         jRootArr << jObj;
     }
 
@@ -61,6 +69,7 @@ void WebUiClient::updateWebUi(QList<Endpoint *> endpoints)
 
 void WebUiClient::processTextMessage(QString message)
 {
+    Endpoint* endpoint = NULL;
     PersistanceService* ps = PersistanceService::getInstance();
     if(DEBUG_WEBUICLIENT) {
         qDebug()<<__FUNCTION__<<"from "<<this->webSocket->peerAddress()<<"; "<<this->webSocket->peerName();
@@ -70,22 +79,35 @@ void WebUiClient::processTextMessage(QString message)
     //get Json from text
     QJsonDocument jdok = QJsonDocument::fromJson(message.toUtf8());
     QJsonObject jobj = jdok.object();
+    QString messageType = jobj.value("messageType").toString();
+
+    //get MAC is so far necessary in every case
     QString mac = jobj.value("mac").toString();
-    bool requestedState = jobj.value("state").toBool();
+    //get pointer to concerning endpoint
     if (!mac.isEmpty()) {
-        Endpoint* endpoint = ps->getEndpointByMac(mac);
-        if (endpoint != NULL) {
-            endpoint->requestState(requestedState);
-        } else {
+        endpoint = ps->getEndpointByMac(mac);
+        if (endpoint == NULL) {
             if(DEBUG_WEBUICLIENT) {
                 qDebug()<<__FUNCTION__<<"endpoint with mac "<<mac<<"not known";
             }
+            return;
         }
     } else {
         if(DEBUG_WEBUICLIENT) {
             qDebug()<<__FUNCTION__<<"no mac recognized";
         }
+        return;
     }
+
+    if (messageType == "autoRequest") {
+        bool requestedautoState = jobj.value("autoState").toBool();
+        endpoint->setAuto(requestedautoState);
+    } else if(messageType == "stateRequest") {
+        bool requestedState = jobj.value("state").toBool();
+        endpoint->requestState(requestedState);
+    }
+
+
 //    PersistanceService* ps = PersistanceService::getInstance();
 //    QList<Endpoint*> endpointsList =ps->getEndpoints();
 //    if (!endpointsList.isEmpty()) {

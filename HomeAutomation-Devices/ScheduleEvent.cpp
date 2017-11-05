@@ -156,12 +156,27 @@ void ScheduleEvent::setWeekdays(QList<bool> checkedWeekdays)
 QString ScheduleEvent::toString()
 {
     QString eventString;
-    eventString.append(this->date.toString() + " EIN: " + this->startTime.toString() + " AUS: " +this->endTime.toString() );
-    if(this->pendingEventType == EVENT_ON) {
-        eventString.append("EIN");
-    } else {
-        eventString.append("AUS");
+    switch(this->repetition) {
+    case REPETITION_TYPE_NONE:
+        eventString.append("Einmal ");
+        break;
+    case REPETITION_TYPE_DAYLY:
+        eventString.append("Täglich ");
+        break;
+    case REPETITION_TYPE_DAYLY_ONLY_WEEKEND:
+        eventString.append("Täglich am Wochenende ");
+        break;
+    case REPETITION_TYPE_DAYLY_WORKINGDAYS:
+        eventString.append("Werktags ");
+        break;
+    case REPETITION_TYPE_WEEKLY:
+        eventString.append("Wöchentlich ");
+        break;
+    default:
+        ;
     }
+    eventString.append(" EIN: " + this->startTime.toString("h:m") + "Uhr AUS: " +this->endTime.toString("h:m") + "Uhr" );
+
     return eventString;
 }
 
