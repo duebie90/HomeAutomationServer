@@ -1,7 +1,7 @@
   var endpoints;
   var selectedEndpointIndex = 0;
   var initd = false;
-  var internalWsUri = "ws://192.168.2.109:3001";
+  var internalWsUri = "ws://192.168.178.2:3001";
   var externalWsUri = "ws://casa-amarilla.selfhost.eu:3001";
   var websocket = null;
   
