@@ -31,7 +31,10 @@ HomeAutomationController::HomeAutomationController(QObject *parent):
     uiUpdateTimer = new QTimer();
     uiUpdateTimer->setInterval(500);
     uiUpdateTimer->start();
-    connect(uiUpdateTimer, SIGNAL(timeout()), this, SLOT(slotUpdateUis()));
+
+    //connect(uiUpdateTimer, SIGNAL(timeout()), this, SLOT(slotUpdateUis()));
+    connect(this, SIGNAL(signalUpdateUis()), this, SLOT(slotUpdateUis()));
+    //connect(this, SIGNAL(signalUpdateUis()), this, SLOT(slotUpdateUis()));
 
     connect(tcpServer, SIGNAL(signalReceivedEndpointIdent(QTcpSocket*,QString,QString,QString)), this,
             SLOT(slotProcessMessageNewEndpoint(QTcpSocket*,QString,QString,QString)));
@@ -44,6 +47,11 @@ HomeAutomationController::HomeAutomationController(QObject *parent):
 
     //Recover endpoint information from database
     QList<Endpoint*> recoveredEndpoints = ps->loadEndpoints();
+    foreach(Endpoint* endpoint, recoveredEndpoints) {
+            connect(endpoint, SIGNAL(signalStateChanged()), this, SLOT(slotUpdateUis()));
+            connect(endpoint, SIGNAL(signalSchedulesChanged()), this, SLOT(slotUpdateUis()));
+            connect(endpoint, SIGNAL(signalConnectedChanged()), this, SLOT(slotUpdateUis()));
+    }
     if (recoveredEndpoints.length() > 0) {
         cout<<"Recovered "<<recoveredEndpoints.length()<<" endpoint-information from database\n";        
     }
@@ -99,8 +107,7 @@ void HomeAutomationController::slotProcessMessageNewEndpoint(QTcpSocket* socket,
             reconnectedEndpoint->updateSocket(socket);
             reconnectedEndpoint->ackIdentification();
             //dequeue unIdentified socket
-            tcpServer->clientIdentified(socket);
-
+            tcpServer->clientIdentified(socket);            
         } else {
             addEndpoint(socket, alias, type, MAC);
             tcpServer->clientIdentified(socket);
@@ -149,15 +156,21 @@ void HomeAutomationController::addUiConnection(QTcpSocket* socket, QString alias
     //uiConnections.last()->ackIdentification();
     //dequeue unIdentified socket
     tcpServer->clientIdentified(socket);
+
+    QTimer::singleShot(10, this, SLOT(slotUpdateUis()) );
 }
 
 void HomeAutomationController::addEndpoint(QTcpSocket* socket, QString alias, QString type, QString MAC) {
     Endpoint* newEndpoint = new Endpoint(socket, alias, type, MAC);
+    connect(newEndpoint, SIGNAL(signalStateChanged()), this, SLOT(slotUpdateUis()));
+    connect(newEndpoint, SIGNAL(signalSchedulesChanged()), this, SLOT(slotUpdateUis()));
+    connect(newEndpoint, SIGNAL(signalConnectedChanged()), this, SLOT(slotUpdateUis()));
     //this->endpoints.append(newEndpoint);
     //this->mapMacToEndpoint.insert(MAC, newEndpoint);
     newEndpoint->ackIdentification();
     ps->addEndpoint(newEndpoint);
     ss->setEndpoints(ps->getEndpoints());
+    emit signalUpdateUis();
 }
 
 
@@ -181,6 +194,7 @@ void HomeAutomationController::deInitialize()
 }
 
 void HomeAutomationController::slotUpdateUis() {
+    cout<<__FUNCTION__<<endl;
     foreach(UiConnection* uiConnection, this->uiConnections) {
         uiConnection->sendUpdate(ps->getEndpoints());
     }
@@ -190,6 +204,7 @@ void HomeAutomationController::slotUpdateUis() {
 void HomeAutomationController::slotForwardDeleteEndpoint(QString mac)
 {
     ps->deleteEndpoint(mac);
+    emit signalUpdateUis();
     //ToDo disconnect signals
 }
 

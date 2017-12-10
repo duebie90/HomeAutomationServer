@@ -49,6 +49,8 @@ public:
     };
 signals:
     void signalSchedulesChanged();
+    void signalStateChanged();
+    void signalConnectedChanged();
 public slots:
     //called by SchedulingService
     void slotPerformEvent(ScheduleEvent* event);

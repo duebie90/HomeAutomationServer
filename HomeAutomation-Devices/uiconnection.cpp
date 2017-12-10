@@ -93,16 +93,22 @@ void UiConnection::sendEndpointStatesUpdate(QList<Endpoint *> endpoints)
         if(payload !="") {
             payload.append(PDU_DELIMITER);
         }
+        bool connected = endpoint->isConnected();
+
+        bool state = (connected == false && endpoint->isStateChangePending()) ?
+                    endpoint->getRequestedState(): endpoint->getState();
+        //cout<<__FUNCTION__<<" Endpoint "<<endpoint->getAlias().toStdString()<<"Connected: "
+        //   <<(connected ? "1": "0")<<endl;
         payload.append(endpoint->getAlias());
         payload.append(PDU_DELIMITER);
         payload.append(endpoint->getMAC());
         payload.append(PDU_DELIMITER);
         payload.append(endpoint->getType());
-        payload.append(PDU_DELIMITER);
-        bool state = endpoint->getState();
+        payload.append(PDU_DELIMITER);              
+
         payload.append(state ? "1": "0");
         payload.append(PDU_DELIMITER);
-        bool connected = endpoint->isConnected();
+
         payload.append(connected ? "1": "0");
         payload.append(PDU_DELIMITER);
         bool autoControlled = endpoint->isAutoControlled();

@@ -189,24 +189,25 @@ bool Endpoint::isStateChangePending()
     return this->stateChangePending;
 }
 
-void Endpoint::slotDisconnected() {
+void Endpoint::slotDisconnected() {    
     cout<<__FUNCTION__<<" Alias "<<this->alias.toStdString()<<"\n";
-    this->connected = false;
+    setConnected(false);
     if (clientSocket != NULL) {
         disconnect(clientSocket, SIGNAL(readyRead()), dataReceiver, SLOT(slotReceivedData()));
         disconnect(clientSocket, SIGNAL(disconnected()), this, SLOT(slotDisconnected()));
     }
+    emit signalConnectedChanged();
 }
 
-void Endpoint::updateSocket(QTcpSocket* newSocket) {
+void Endpoint::updateSocket(QTcpSocket* newSocket) {    
     cout<<__FUNCTION__<<"Alias "<<this->alias.toStdString()<<"\n";
     this->clientSocket = newSocket;
-    this->dataTransmitter->updateSocket(newSocket);
-    this->connected = true;
+    this->dataTransmitter->updateSocket(newSocket);    
     connect(clientSocket, SIGNAL(readyRead()), dataReceiver, SLOT(slotReceivedData()));
     connect(clientSocket, SIGNAL(disconnected()), this, SLOT(slotDisconnected()));
     connect(clientSocket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(slotSocketError(QAbstractSocket::SocketError)));
     clientSocket->setSocketOption(QAbstractSocket::KeepAliveOption, QVariant::fromValue(true));
+    setConnected(true);
     if(requestedState != state) {
         //a state change was requested when this endpoint was offline
         //now try to send request again
@@ -218,8 +219,9 @@ void Endpoint::updateSocket(QTcpSocket* newSocket) {
 bool Endpoint::isConnected() {
     return this->connected;
 }
-void Endpoint::setConnected(bool connected){
+void Endpoint::setConnected(bool connected){    
     this->connected = connected;
+    emit signalConnectedChanged();
     if(connected) {
         this->keepAliveTimeoutTimer->start();
     }
@@ -241,7 +243,10 @@ QString Endpoint::getMAC() {
     return MAC;
 }
 void Endpoint::setState(bool state) {
-    this->state = state;    
+    if (state != this->state) {
+        this->state = state;
+        emit signalStateChanged();
+    }
 }
 bool Endpoint::getState() {
     return this->state;
@@ -255,6 +260,7 @@ bool Endpoint::getRequestedState()
 void Endpoint::setAuto(bool autoControlled)
 {
     this->autoControlled = autoControlled;
+    emit signalStateChanged();
     PersistanceService::getInstance()->updateEndpoint(this);
     if (autoControlled == true &&
             autoControlledState != requestedState) {

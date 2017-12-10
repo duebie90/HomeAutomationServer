@@ -19,6 +19,7 @@ public:
     void initiate();
     void deInitialize();
 signals:
+    void signalUpdateUis();
     void signalUpdateWss();
 private slots:
     void slotUpdateUis();
