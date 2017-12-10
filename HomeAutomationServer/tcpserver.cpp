@@ -141,7 +141,7 @@ int TcpServer::processProtocollHeader(QTcpSocket *socket, QByteArray data)
     messageType = (MessageType)data.at(1); //second Byte
     QByteArray lengthBytes= data.mid(2,2);
 
-    if(lengthBytes.at(0) != -1) {
+    if(lengthBytes.at(0) != -1 && lengthBytes.at(0) != 0xFF) {
         //0xFF stands for 0x00, 0 makes trouble in c strings
         payloadLength |= (quint8)(lengthBytes.at(0));
     }
