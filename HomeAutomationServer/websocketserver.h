@@ -15,6 +15,8 @@ class WsServer : public QObject
 public:
     explicit WsServer(QString address, quint16 port, QObject *parent = 0);
     virtual ~WsServer();
+private:
+    void updateWebUi(WebUiClient*);
 signals:
 public slots:
     void slotUpdateWebUis();

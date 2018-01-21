@@ -33,12 +33,23 @@ void WsServer::slotUpdateWebUis()
         }
     }
 }
+
+void WsServer::updateWebUi(WebUiClient* client)
+{
+    PersistanceService* ps = PersistanceService::getInstance();
+    QList<Endpoint*> endpointsList =ps->getEndpoints();
+    if (!endpointsList.isEmpty()) {
+            client->updateWebUi(endpointsList);
+    }
+}
+
 void WsServer::onNewConnection()
 {
     QWebSocket *socket = this->webSocketServer->nextPendingConnection();
     WebUiClient* webUiClient = new WebUiClient(socket);
     connect(webUiClient, &WebUiClient::disconnected, this, &WsServer::clientDisconnected);
     this->clients << webUiClient;
+    updateWebUi(webUiClient);
 }
 //void WsServer::processTextMessage(QString message)
 //{
