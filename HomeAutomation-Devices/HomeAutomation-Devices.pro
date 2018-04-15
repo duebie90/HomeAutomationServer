@@ -22,3 +22,5 @@ unix {
 
 DISTFILES += \
     HomeAutomation-Devices.pri
+
+
