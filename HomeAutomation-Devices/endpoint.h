@@ -47,6 +47,27 @@ public:
         temperatureSensor,
         lightSwitch
     };
+
+    //friend QDataStream &ScheduleEvent::operator<<(QDataStream &ds, AbstractEndpoint *obj)
+    //serialize to send
+    friend QDataStream &operator<<(QDataStream &ds, Endpoint *obj)
+    {
+       //write serialized class on data stream
+       obj->serialize(ds);
+       return ds;
+    }
+
+    //deserialize from telegram
+    //friend QDataStream &ScheduleEvent::operator>>(QDataStream &in,AbstractEndpoint *sEvent)
+    friend QDataStream &operator>>(QDataStream &in,Endpoint *obj)
+    {
+       //qint16 id;
+       //in>>id;
+       //set corresponding attributes in current object
+       obj->unserialize(in);
+       return in;
+    }
+
 signals:
     void signalSchedulesChanged();
     void signalStateChanged();
@@ -67,6 +88,8 @@ private slots:
     void slotKeepAliveTimeout();
 private:
     void receivedData();
+    void serialize(QDataStream &ds);
+    void unserialize(QDataStream &ds);
     QString alias;
     QString type;
     QString MAC;    
@@ -88,7 +111,6 @@ private:
     //This timer is started if after each received state (equals keep Alive heartbeat)
     //if it triggers this endpoint eappears to be disconnected and the socket is closed
     QTimer* keepAliveTimeoutTimer;
-
     QMap<int, ScheduleEvent*> scheduleEvents;
 };
 

@@ -34,6 +34,7 @@ signals:
     void signalDeleteSchedule(QString mac, int scheduleId);
 private:    
     void sendEndpointStatesUpdate(QList<Endpoint*> endpoints);
+    void sendEndpointsUpdate(QList<Endpoint*> endpoints);
 
     QTcpSocket* clientSocket;
     UiDataReceiver* dataReceiver;

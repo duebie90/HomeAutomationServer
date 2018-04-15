@@ -40,6 +40,24 @@ Endpoint::Endpoint(QTcpSocket* socket, QString alias, QString type, QString MAC,
     connect(this->keepAliveTimeoutTimer, SIGNAL(timeout()), this, SLOT(slotKeepAliveTimeout()));
 }
 
+void Endpoint::serialize(QDataStream &ds){
+    ds<<this->getAlias();
+    ds<<this->getMAC();
+    ds<<this->getState();
+    ds<<this->isAutoControlled();
+    ds<<this->isConnected();
+    ds<<this->isStateChangePending();
+}
+
+void Endpoint::unserialize(QDataStream &ds){
+    ds<<this->getAlias();
+    ds<<this->getMAC();
+    ds<<this->getState();
+    ds<<this->isAutoControlled();
+    ds<<this->isConnected();
+    ds<<this->isStateChangePending();
+}
+
 Endpoint::~Endpoint() {
     qDebug()<<__FUNCTION__;
     slotDisconnected();

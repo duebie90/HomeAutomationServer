@@ -38,7 +38,8 @@ void UiConnection::sendMessage(QByteArray message){
 void UiConnection::sendUpdate(QList<Endpoint *> endpoints)
 {
     //send endpoint states list to ui
-    sendEndpointStatesUpdate(endpoints);
+    //sendEndpointStatesUpdate(endpoints);
+    sendEndpointsUpdate(endpoints);
     this->endpoints = endpoints;
     QTimer::singleShot(10, this, SLOT(slotPrepareEndpointSchedulesUpdate()) );
     //slotPrepareEndpointSchedulesUpdate();
@@ -117,6 +118,19 @@ void UiConnection::sendEndpointStatesUpdate(QList<Endpoint *> endpoints)
         payload.append(endpoint->isStateChangePending() ? "1": "0");
     }
     this->dataTransmitter->sendMessage(MESSAGETYPE_ENDPOINTS_STATES_LIST, payload);
+}
+
+void UiConnection::sendEndpointsUpdate(QList<Endpoint *> endpoints){
+    quint8 endpointsCount = endpoints.length();
+    QByteArray payload;
+    QDataStream out(&payload, QIODevice::ReadWrite);
+    QString endpointType = "SwitchBox";
+    out<<endpointsCount;
+    foreach(Endpoint* endpoint, endpoints ) {
+        out<<endpointType;
+        out<<endpoint;
+    }
+    this->dataTransmitter->sendMessage(MESSAGETYPE_ENDPOINTS_LIST, payload);
 }
 
 void UiConnection::sendEndpointSchedulesUpdate(QString mac, QList<ScheduleEvent *> schedules)
