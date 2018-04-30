@@ -35,7 +35,7 @@ void UiConnection::sendMessage(QByteArray message){
     this->clientSocket->write(message, message.length());
 }
 
-void UiConnection::sendUpdate(QList<Endpoint *> endpoints)
+void UiConnection::sendUpdate(QList<AbstractEndpoint *> endpoints)
 {
     //send endpoint states list to ui
     //sendEndpointStatesUpdate(endpoints);
@@ -47,7 +47,7 @@ void UiConnection::sendUpdate(QList<Endpoint *> endpoints)
 
 void UiConnection::slotReceivedUiEndpointStateRequest(QString MAC, bool state) {
     PersistanceService* ps = PersistanceService::getInstance();
-    Endpoint* endpoint = ps->getEndpointByMac(MAC);
+    Endpoint* endpoint = dynamic_cast<Endpoint*>(ps->getEndpointByMac(MAC));
     if (endpoint != NULL) {
         endpoint->requestState(state);
     }
@@ -56,7 +56,7 @@ void UiConnection::slotReceivedUiEndpointStateRequest(QString MAC, bool state) {
 void UiConnection::slotReceivedEndpointSchedule(QString mac, ScheduleEvent *event)
 {
     PersistanceService* ps = PersistanceService::getInstance();
-    Endpoint* endpoint = ps->getEndpointByMac(mac);
+    Endpoint* endpoint = dynamic_cast<Endpoint*>(ps->getEndpointByMac(mac));
     if(endpoint != NULL) {
         endpoint->updateScheduleEvent(event);
     }
@@ -65,7 +65,7 @@ void UiConnection::slotReceivedEndpointSchedule(QString mac, ScheduleEvent *even
 void UiConnection::slotReceivedAutoRequest(QString mac, bool autoMode)
 {
     PersistanceService* ps = PersistanceService::getInstance();
-    Endpoint* endpoint = ps->getEndpointByMac(mac);
+    Endpoint* endpoint = dynamic_cast<Endpoint*>(ps->getEndpointByMac(mac));
     if(endpoint != NULL) {
         endpoint->setAuto(autoMode);
     }
@@ -75,8 +75,10 @@ void UiConnection::slotPrepareEndpointSchedulesUpdate()
 {
     static int i = 0;
     if(this->endpoints.length() > i) {
-        Endpoint* endpoint = this->endpoints.at(i);
-        sendEndpointSchedulesUpdate(endpoint->getMAC(), endpoint->getScheduledEvents().values());
+        Endpoint* endpoint = dynamic_cast<Endpoint*>(this->endpoints.at(i));
+        if(endpoint!= NULL){
+            sendEndpointSchedulesUpdate(endpoint->getMAC(), endpoint->getScheduledEvents().values());
+        }
         //recurse for next endpoint
         i++;
     }
@@ -87,46 +89,14 @@ void UiConnection::slotPrepareEndpointSchedulesUpdate()
     }
 }
 
-void UiConnection::sendEndpointStatesUpdate(QList<Endpoint *> endpoints)
-{
-    QByteArray payload;
-    foreach(Endpoint* endpoint, endpoints ) {
-        if(payload !="") {
-            payload.append(PDU_DELIMITER);
-        }
-        bool connected = endpoint->isConnected();
 
-        bool state = (connected == false && endpoint->isStateChangePending()) ?
-                    endpoint->getRequestedState(): endpoint->getState();
-        //cout<<__FUNCTION__<<" Endpoint "<<endpoint->getAlias().toStdString()<<"Connected: "
-        //   <<(connected ? "1": "0")<<endl;
-        payload.append(endpoint->getAlias());
-        payload.append(PDU_DELIMITER);
-        payload.append(endpoint->getMAC());
-        payload.append(PDU_DELIMITER);
-        payload.append(endpoint->getType());
-        payload.append(PDU_DELIMITER);              
-
-        payload.append(state ? "1": "0");
-        payload.append(PDU_DELIMITER);
-
-        payload.append(connected ? "1": "0");
-        payload.append(PDU_DELIMITER);
-        bool autoControlled = endpoint->isAutoControlled();
-        payload.append(autoControlled ? "1": "0");
-        payload.append(PDU_DELIMITER);
-        payload.append(endpoint->isStateChangePending() ? "1": "0");
-    }
-    this->dataTransmitter->sendMessage(MESSAGETYPE_ENDPOINTS_STATES_LIST, payload);
-}
-
-void UiConnection::sendEndpointsUpdate(QList<Endpoint *> endpoints){
+void UiConnection::sendEndpointsUpdate(QList<AbstractEndpoint *> endpoints){
     quint8 endpointsCount = endpoints.length();
     QByteArray payload;
     QDataStream out(&payload, QIODevice::ReadWrite);
     QString endpointType = "SwitchBox";
     out<<endpointsCount;
-    foreach(Endpoint* endpoint, endpoints ) {
+    foreach(AbstractEndpoint* endpoint, endpoints ) {
         out<<endpointType;
         out<<endpoint;
     }

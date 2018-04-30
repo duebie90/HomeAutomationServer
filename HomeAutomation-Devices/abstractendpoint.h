@@ -7,8 +7,7 @@
 
 class AbstractEndpoint : public QObject
 {
-    Q_OBJECT
-
+Q_OBJECT
 public:
     enum EndpointType{
         SwitchboxEndpointType,
@@ -47,6 +46,9 @@ public:
 
 signals:
  void signalUpdateEndpoint();
+ void signalSchedulesChanged();
+ void signalStateChanged();
+ void signalConnectedChanged();
 public slots:
 
 private slots:

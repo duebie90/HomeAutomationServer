@@ -9,7 +9,7 @@ class WebUiClient : public QObject
     Q_OBJECT
 public:
     explicit WebUiClient(QWebSocket* socket, QObject *parent = 0);
-    void updateWebUi(QList<Endpoint*> endpoints);
+    void updateWebUi(QList<AbstractEndpoint*> endpoints);
 signals:
     void disconnected();
 private slots:

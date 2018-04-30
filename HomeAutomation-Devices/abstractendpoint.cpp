@@ -46,3 +46,4 @@ bool AbstractEndpoint::getState(){
     return this->state;
 }
 
+

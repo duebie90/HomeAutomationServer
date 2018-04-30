@@ -9,14 +9,15 @@
 #include <EndpointDataReceiver.h>
 #include <EndpointDataTransmitter.h>
 #include <ScheduleEvent.h>
+#include <abstractendpoint.h>
 
 //Timeout for next keep alive messages
 const int KEEP_ALIVE_TIMEOUT_MS = 5000;
 
 using namespace std;
-class Endpoint: public QObject
+class Endpoint: public AbstractEndpoint
 {
-    Q_OBJECT
+Q_OBJECT
 public:
     Endpoint(QTcpSocket* socket, QString alias, QString type, QString MAC="", QObject* parent=0);
     ~Endpoint();
@@ -27,8 +28,8 @@ public:
     void setAlias(QString newAlias);
     QString getType();
     QString getMAC();
-    void setState(bool state);
     bool getState();
+    void setState(bool);
     bool getRequestedState();
     void setAuto(bool autoControlled);
     bool isAutoControlled();

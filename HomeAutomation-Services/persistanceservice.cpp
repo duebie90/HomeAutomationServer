@@ -44,9 +44,9 @@ QList<QString> PersistanceService::getEndpointNames() {
     return endpointNames;
 }
 
-QList<Endpoint *> PersistanceService::loadEndpoints()
+QList<AbstractEndpoint *> PersistanceService::loadEndpoints()
 {
-    QList<Endpoint*> endpoints;
+    QList<AbstractEndpoint*> endpoints;
     QSqlQuery query;
     if (!databaseReady) {
         cout<<"Error: database not ready. Settings will be lost after restart or power loss.\n";
@@ -68,16 +68,16 @@ QList<Endpoint *> PersistanceService::loadEndpoints()
         QString alias = query.value(nameIndex).toString();
         QString type = query.value(typeIndex).toString();
         QString macAddress = query.value(macIndex).toString();        
-        Endpoint * newEndpoint = new Endpoint(NULL, alias, type, macAddress);
+        AbstractEndpoint* newEndpoint = new Endpoint(NULL, alias, type, macAddress);
         newEndpoint->setConnected(false);
-        newEndpoint->setState(query.value(stateIndex).toBool());
-        newEndpoint->requestState(query.value(requestedStateIndex).toBool());
-        newEndpoint->setAuto(query.value(autoIndex).toBool());
+        static_cast<Endpoint*>(newEndpoint)->setState(query.value(stateIndex).toBool());
+        static_cast<Endpoint*>(newEndpoint)->requestState(query.value(requestedStateIndex).toBool());
+        static_cast<Endpoint*>(newEndpoint)->setAuto(query.value(autoIndex).toBool());
         endpoints.append(newEndpoint);
     }
     //
     //Request Schedules from DB; put them into the endpoint-objects too
-    foreach(Endpoint* endpoint, endpoints) {
+    foreach(AbstractEndpoint* endpoint, endpoints) {
         //go through loadid endpoints and seek for schedule information
         QSqlQuery ScheduleQuery;
         ScheduleQuery.prepare("SELECT id, date, startTime, endTime, repetition, pendingEventType, mo, tu, we, th, fr, sa, so  FROM schedules WHERE macAdress == :mac");
@@ -113,7 +113,7 @@ QList<Endpoint *> PersistanceService::loadEndpoints()
             weekdays.append(ScheduleQuery.value(moIndex+5).toBool());
             weekdays.append(ScheduleQuery.value(moIndex+6).toBool());
             ScheduleEvent* newEvent = new ScheduleEvent(id, startTime, endTime, eventDate, repetition, pendingEventType, weekdays);
-            endpoint->addScheduleEvent(newEvent);
+            static_cast<Endpoint*>(endpoint)->addScheduleEvent(newEvent);
         }
         this->endpoints.append(endpoint);
         this->mapMacToEndpoint.insert(endpoint->getMAC(), endpoint);
@@ -141,7 +141,7 @@ void PersistanceService::deInitiate()
     delete(_instance);
 }
 
-bool PersistanceService::addEndpoint(Endpoint *endpoint) {
+bool PersistanceService::addEndpoint(AbstractEndpoint *endpoint) {
 
     this->endpoints.append(endpoint);
     this->mapMacToEndpoint.insert(endpoint->getMAC(), endpoint);
@@ -154,9 +154,9 @@ bool PersistanceService::addEndpoint(Endpoint *endpoint) {
     QString name = endpoint->getAlias();
     QString MAC  = endpoint->getMAC();
     QString type = endpoint->getType();
-    bool state =  endpoint->getState();
-    bool requestedState = endpoint->getRequestedState();
-    bool autoState      = endpoint->isAutoControlled();
+    bool state =  static_cast<Endpoint*>(endpoint)->getState();
+    bool requestedState = static_cast<Endpoint*>(endpoint)->getRequestedState();
+    bool autoState      = static_cast<Endpoint*>(endpoint)->isAutoControlled();
     QSqlQuery query;
     query.prepare("INSERT INTO endpoints (id, name, macAdress, endpointType, endpointState, endpointRequestedState, autoState) VALUES (:id, :name, :mac, :type, :state, :requestedState, :autoState)");
     query.bindValue(":id", id);
@@ -176,16 +176,30 @@ bool PersistanceService::addEndpoint(Endpoint *endpoint) {
 
 
 
-QList<Endpoint *> PersistanceService::getEndpoints()
+QList<AbstractEndpoint *> PersistanceService::getEndpoints()
 {
     return this->endpoints;
 }
 
-Endpoint *PersistanceService::getEndpointByMac(QString mac)
+QList<Endpoint*> PersistanceService::getSwitchboxEndpoints(){
+    //ToDo: filter by enum type
+    QList<Endpoint*> switchboxEndpoints;
+    foreach(AbstractEndpoint* endpoint, this->endpoints){
+        if(endpoint->getType() == "switchbox" || endpoint->getType() == "SwitchBox" || endpoint->getType() == "Proto-1"){
+            Endpoint* swb_endpoint = dynamic_cast<Endpoint*>(endpoint);
+            if(swb_endpoint != NULL){
+                switchboxEndpoints.append(static_cast<Endpoint*>(endpoint));
+            }
+        }
+    }
+    return switchboxEndpoints;
+}
+
+AbstractEndpoint *PersistanceService::getEndpointByMac(QString mac)
 {
     if (this->mapMacToEndpoint.contains(mac)) {
         //Endpoint exists --> get Pointer at it
-        Endpoint* endpoint = this->mapMacToEndpoint.value(mac);
+        AbstractEndpoint* endpoint = this->mapMacToEndpoint.value(mac);
         return endpoint;
     }
     return NULL;
@@ -193,7 +207,7 @@ Endpoint *PersistanceService::getEndpointByMac(QString mac)
 
 bool PersistanceService::deleteEndpoint(QString mac)
 {
-    Endpoint* endpoint = getEndpointByMac(mac);
+    AbstractEndpoint* endpoint = getEndpointByMac(mac);
     if  (endpoint != NULL) {
         if (!endpoint->isConnected()) {
             this->endpoints.removeOne(endpoint);
@@ -223,7 +237,7 @@ bool PersistanceService::deleteEndpoint(QString mac)
 void PersistanceService::deleteEndpointsDatabase()
 {
     this->mapMacToEndpoint.clear();
-    foreach(Endpoint* endpoint, this->endpoints) {
+    foreach(AbstractEndpoint* endpoint, this->endpoints) {
         delete endpoint;
     }
     endpoints.clear();
@@ -328,7 +342,7 @@ void PersistanceService::updateEndpointSchedule(QString mac, ScheduleEvent *even
 
 }
 
-void PersistanceService::updateEndpoint(Endpoint *endpoint)
+void PersistanceService::updateEndpoint(AbstractEndpoint *endpoint)
 {
     QSqlQuery query;
     if (!databaseReady) {
@@ -357,9 +371,9 @@ void PersistanceService::updateEndpoint(Endpoint *endpoint)
         QString name = endpoint->getAlias();
         QString MAC  = endpoint->getMAC();
         QString type = endpoint->getType();
-        bool state =  endpoint->getState();
-        bool requestedState = endpoint->getRequestedState();
-        bool autoState = endpoint->isAutoControlled();
+        bool state =  static_cast<Endpoint*>(endpoint)->getState();
+        bool requestedState = static_cast<Endpoint*>(endpoint)->getRequestedState();
+        bool autoState = static_cast<Endpoint*>(endpoint)->isAutoControlled();
         QSqlQuery query;
         query.prepare("UPDATE endpoints SET name = :name, endpointState = :state, endpointRequestedState =:requestedState, autoState =:autoState WHERE macAdress == :mac");
         query.bindValue(":name", name);

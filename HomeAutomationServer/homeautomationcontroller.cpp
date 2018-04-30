@@ -46,8 +46,8 @@ HomeAutomationController::HomeAutomationController(QObject *parent):
 
 
     //Recover endpoint information from database
-    QList<Endpoint*> recoveredEndpoints = ps->loadEndpoints();
-    foreach(Endpoint* endpoint, recoveredEndpoints) {
+    QList<AbstractEndpoint*> recoveredEndpoints = ps->loadEndpoints();
+    foreach(AbstractEndpoint* endpoint, recoveredEndpoints) {
             connect(endpoint, SIGNAL(signalStateChanged()), this, SLOT(slotUpdateUis()));
             connect(endpoint, SIGNAL(signalSchedulesChanged()), this, SLOT(slotUpdateUis()));
             connect(endpoint, SIGNAL(signalConnectedChanged()), this, SLOT(slotUpdateUis()));
@@ -55,7 +55,7 @@ HomeAutomationController::HomeAutomationController(QObject *parent):
     if (recoveredEndpoints.length() > 0) {
         cout<<"Recovered "<<recoveredEndpoints.length()<<" endpoint-information from database\n";        
     }
-    ss->setEndpoints(ps->getEndpoints());
+    ss->setEndpoints(ps->getSwitchboxEndpoints());
 }
 
 HomeAutomationController::~HomeAutomationController() {
@@ -72,7 +72,7 @@ void HomeAutomationController::slotResetServer() {
     tcpServer->resetClientsPendingIdentification();
     endpointsPendingConfirmation.clear();
     ps->deleteEndpointsDatabase();
-    ss->setEndpoints(ps->getEndpoints());
+    ss->setEndpoints(ps->getSwitchboxEndpoints());
 }
 
 void HomeAutomationController::slotDeleteEndpoint(QString MAC) {
@@ -102,7 +102,7 @@ void HomeAutomationController::slotProcessMessageNewEndpoint(QTcpSocket* socket,
             cout<<"Endpoint with alias "<<alias.toStdString()<<" has reconnected\n";
 
             Endpoint* reconnectedEndpoint;
-            reconnectedEndpoint = ps->getEndpointByMac(MAC);
+            reconnectedEndpoint = static_cast<Endpoint*>(ps->getEndpointByMac(MAC));
             reconnectedEndpoint->setAlias(alias);
             reconnectedEndpoint->updateSocket(socket);
             reconnectedEndpoint->ackIdentification();
@@ -169,7 +169,7 @@ void HomeAutomationController::addEndpoint(QTcpSocket* socket, QString alias, QS
     //this->mapMacToEndpoint.insert(MAC, newEndpoint);
     newEndpoint->ackIdentification();
     ps->addEndpoint(newEndpoint);
-    ss->setEndpoints(ps->getEndpoints());
+    ss->setEndpoints(ps->getSwitchboxEndpoints());
     emit signalUpdateUis();
 }
 
@@ -210,7 +210,8 @@ void HomeAutomationController::slotForwardDeleteEndpoint(QString mac)
 
 void HomeAutomationController::slotForwardEndpointDeleteSchedule(QString mac, int id)
 {
-    Endpoint* endpoint = ps->getEndpointByMac(mac);
+    Endpoint* endpoint = dynamic_cast<Endpoint*>(ps->getEndpointByMac(mac));
+    cout<<__FUNCTION__<<"WARNIN: tried to delete schedule from non Switchbox Endpoint. Dynmic-cast failed."<<endl;
     if(endpoint != NULL) {
         endpoint->removeSchedule(id);
     }

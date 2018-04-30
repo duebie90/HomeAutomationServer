@@ -7,7 +7,7 @@ class PersistanceService;
 #define NO_TIMEOUT (true)
 
 Endpoint::Endpoint(QTcpSocket* socket, QString alias, QString type, QString MAC, QObject* parent):
-    QObject(parent)
+    AbstractEndpoint(alias, type, MAC, parent)
 {
     cout<<"Endpoint-Object created with alias "<<alias.toStdString()<<" and type "<<type.toStdString()<<".\n";
     this->clientSocket = socket;
@@ -77,7 +77,8 @@ void Endpoint::slotReceivedState(QString MAC, bool state) {
         this->stateChangePending = false;
         slotResetTimeout();
         setState(state);
-        PersistanceService::getInstance()->updateEndpoint(this);
+        AbstractEndpoint* ae = dynamic_cast<AbstractEndpoint*>(this);
+        PersistanceService::getInstance()->updateEndpoint(ae);
     }
 }
 
@@ -252,7 +253,8 @@ QString Endpoint::getAlias() {
 void Endpoint::setAlias(QString newAlias)
 {
     this->alias = newAlias;
-    PersistanceService::getInstance()->updateEndpoint(this);
+    AbstractEndpoint* ae = dynamic_cast<AbstractEndpoint*>(this);
+    PersistanceService::getInstance()->updateEndpoint(ae);
 }
 QString Endpoint::getType() {
     return type;
@@ -279,7 +281,8 @@ void Endpoint::setAuto(bool autoControlled)
 {
     this->autoControlled = autoControlled;
     emit signalStateChanged();
-    PersistanceService::getInstance()->updateEndpoint(this);
+    AbstractEndpoint* ae = dynamic_cast<AbstractEndpoint*>(this);
+    PersistanceService::getInstance()->updateEndpoint(ae);
     if (autoControlled == true &&
             autoControlledState != requestedState) {
         requestState(this->autoControlledState);
@@ -311,5 +314,6 @@ void Endpoint::requestState(bool state){
         //Not connected at the moment
         //state change request will be send once endpoint reconnected (updateSocket())
     }
-    PersistanceService::getInstance()->updateEndpoint(this);    
+    AbstractEndpoint* ae = dynamic_cast<AbstractEndpoint*>(this);
+    PersistanceService::getInstance()->updateEndpoint(ae);
 }

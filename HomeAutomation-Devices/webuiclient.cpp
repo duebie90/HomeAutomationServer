@@ -21,7 +21,7 @@ WebUiClient::WebUiClient(QWebSocket* socket, QObject *parent) : QObject(parent)
     connect(socket, &QWebSocket::disconnected, this, &WebUiClient::socketDisconnected);
 }
 
-void WebUiClient::updateWebUi(QList<Endpoint *> endpoints)
+void WebUiClient::updateWebUi(QList<AbstractEndpoint *> endpoints)
 {
 
     //create JSON-Object
@@ -31,17 +31,17 @@ void WebUiClient::updateWebUi(QList<Endpoint *> endpoints)
     //Put Values into JSON-Array
 
 
-    foreach(Endpoint* endpoint, endpoints) {
+    foreach(AbstractEndpoint* endpoint, endpoints) {
         QString alias = endpoint->getAlias();
         //Insert Key Array Pair into Object
         QJsonObject jObj;
         jObj.insert("mac", QJsonValue(endpoint->getMAC()));
         jObj.insert("alias", QJsonValue(endpoint->getAlias()));
-        jObj.insert("state", QJsonValue(endpoint->getState()));
-        jObj.insert("autoState", QJsonValue(endpoint->isAutoControlled()));
+        jObj.insert("state", QJsonValue(static_cast<Endpoint*>(endpoint)->getState()));
+        jObj.insert("autoState", QJsonValue(static_cast<Endpoint*>(endpoint)->isAutoControlled()));
         jObj.insert("connectedState", QJsonValue(endpoint->isConnected()));
         QJsonArray scheduleStringsArray;
-        foreach(ScheduleEvent* event, endpoint->getScheduledEvents().values()) {
+        foreach(ScheduleEvent* event, static_cast<Endpoint*>(endpoint)->getScheduledEvents().values()) {
             //QJsonObject scheduleJObj;
             scheduleStringsArray<<QJsonValue(event->toString());
         }
@@ -85,7 +85,7 @@ void WebUiClient::processTextMessage(QString message)
     QString mac = jobj.value("mac").toString();
     //get pointer to concerning endpoint
     if (!mac.isEmpty()) {
-        endpoint = ps->getEndpointByMac(mac);
+        endpoint = dynamic_cast<Endpoint*>(ps->getEndpointByMac(mac));
         if (endpoint == NULL) {
             if(DEBUG_WEBUICLIENT) {
                 qDebug()<<__FUNCTION__<<"endpoint with mac "<<mac<<"not known";

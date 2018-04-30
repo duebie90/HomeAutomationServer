@@ -37,7 +37,7 @@ int UiDataTransmitter::sendMessage(MessageType type, QByteArray payload) {
     if (this->client !=0) {
         QByteArray message;
         message = prepareMessage(type, payload);
-        this->client->write(message, message.length());
+        //this->client->write(message, message.length());
         int success = this->client->write(message, message.length());
         if(success <= 0) {
             cout<<"Error writing to socket. Connected to "<<this->client->peerAddress().toString().toStdString()<<" "<<this->client->peerName().toStdString()<<"\n";

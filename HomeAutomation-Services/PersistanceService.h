@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QSqlDatabase>
 #include <endpoint.h>
+#include <abstractendpoint.h>
 #include <QTimer>
 class PersistanceService : public QObject
 {
@@ -12,20 +13,21 @@ public:
     static PersistanceService* getInstance();
     void init();
     void deInitiate();
-    bool addEndpoint(Endpoint* endpoint);
+    bool addEndpoint(AbstractEndpoint* endpoint);
     QList<QString> getEndpointNames();
     //recover endpoint generell information as well as schedules from DB
-    QList<Endpoint*> loadEndpoints();
+    QList<AbstractEndpoint*> loadEndpoints();
     //returns the endpoints-pointer-list
-    QList<Endpoint *> getEndpoints();
+    QList<AbstractEndpoint *> getEndpoints();
+    QList<Endpoint *> getSwitchboxEndpoints();
     int  getEndpointCount();
-    Endpoint* getEndpointByMac(QString mac);
+    AbstractEndpoint* getEndpointByMac(QString mac);
     bool deleteEndpoint(QString mac);
     void deleteEndpointsDatabase();
 
     void updateEndpointSchedule(QString mac, ScheduleEvent* event);
 
-    void updateEndpoint(Endpoint* endpoint);
+    void updateEndpoint(AbstractEndpoint* endpoint);
 signals:
 
 public slots:
@@ -47,11 +49,11 @@ private:
 
     //Instances of Endpoint or uiConnection are created
     //to handle identified client-connections
-    QList<Endpoint*> endpoints;
+    QList<AbstractEndpoint*> endpoints;
     //QList<UiConnection*> uiConnections;
     //Map necessary for client recognition on reconnect
 
-    QMap<QString, Endpoint*> mapMacToEndpoint;
+    QMap<QString, AbstractEndpoint*> mapMacToEndpoint;
 
 };
 

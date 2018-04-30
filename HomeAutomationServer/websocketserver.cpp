@@ -26,7 +26,7 @@ WsServer::~WsServer()
 void WsServer::slotUpdateWebUis()
 {
     PersistanceService* ps = PersistanceService::getInstance();
-    QList<Endpoint*> endpointsList =ps->getEndpoints();
+    QList<AbstractEndpoint*> endpointsList =ps->getEndpoints();
     if (!endpointsList.isEmpty()) {
         foreach(WebUiClient* client, this->clients) {
             client->updateWebUi(endpointsList);
@@ -37,7 +37,7 @@ void WsServer::slotUpdateWebUis()
 void WsServer::updateWebUi(WebUiClient* client)
 {
     PersistanceService* ps = PersistanceService::getInstance();
-    QList<Endpoint*> endpointsList =ps->getEndpoints();
+    QList<AbstractEndpoint*> endpointsList =ps->getEndpoints();
     if (!endpointsList.isEmpty()) {
             client->updateWebUi(endpointsList);
     }

@@ -58,7 +58,7 @@ private:
 
     //Services
     //ToDo create Services Handler
-    PersistanceService* ps;
+    PersistanceService*  ps;
     SchedulingService*  ss;
     WsServer* wss;
     UiConnection* ui2Update;

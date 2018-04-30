@@ -16,7 +16,7 @@ class UiConnection: public QObject
 public:
     UiConnection(QTcpSocket* socket, QString alias, QObject* parent=0);
     void sendMessage(QByteArray message);
-    void sendUpdate(QList<Endpoint*> endpoints);
+    void sendUpdate(QList<AbstractEndpoint*> endpoints);
     void sendEndpointSchedulesUpdate(QString mac, QList<ScheduleEvent*> schedules);
     QHostAddress getIp();
     void ackIdentification();
@@ -33,15 +33,14 @@ signals:
     void signalDeleteEndpoint(QString mac);
     void signalDeleteSchedule(QString mac, int scheduleId);
 private:    
-    void sendEndpointStatesUpdate(QList<Endpoint*> endpoints);
-    void sendEndpointsUpdate(QList<Endpoint*> endpoints);
+    void sendEndpointsUpdate(QList<AbstractEndpoint*> endpoints);
 
     QTcpSocket* clientSocket;
     UiDataReceiver* dataReceiver;
     UiDataTransmitter* dataTransmitter;
     QString alias;
     bool connected;
-    QList<Endpoint*> endpoints;
+    QList<AbstractEndpoint*> endpoints;
 };
 
 #endif // UICONNECTION_H
