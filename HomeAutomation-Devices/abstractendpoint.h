@@ -4,26 +4,31 @@
 #include <QObject>
 #include <QtNetwork>
 #include <iostream>
+#include <EndpointDataReceiver.h>
+#include <EndpointDataTransmitter.h>
+
+//Timeout for next keep alive messages
+const int KEEP_ALIVE_TIMEOUT_MS = 5000;
+using namespace  std;
 
 class AbstractEndpoint : public QObject
 {
 Q_OBJECT
 public:
-    enum EndpointType{
-        SwitchboxEndpointType,
-        HeatingEndpointType
-    };
-    AbstractEndpoint(QString alias="", QString type="", QString MAC="", QObject* parent=0);
+    AbstractEndpoint(QTcpSocket* socket=nullptr, QString alias="", QString type="", QString MAC="", QObject* parent=nullptr);
     AbstractEndpoint();
-    void copyEndpoint(AbstractEndpoint* otherEndpoint);
-    virtual bool isConnected();
-    virtual void setConnected(bool connected);
+    bool isConnected();
+    void setConnected(bool connected);
     QString getAlias();
+    void setAlias(QString alias);    
     QString getMAC();
-    virtual QString getType();
+    void setMAC(QString MAC);
+    QString getType();
     virtual bool getState();
     virtual void setState(bool);
-
+    virtual void updateSocket(QTcpSocket* newSocket);
+    bool ackIdentification();
+    void sendMessage(MessageType type, QByteArray message);
     //friend QDataStream &ScheduleEvent::operator<<(QDataStream &ds, AbstractEndpoint *obj)
     //serialize to send
     friend QDataStream &operator<<(QDataStream &ds, AbstractEndpoint *obj)
@@ -45,20 +50,31 @@ public:
     }
 
 signals:
- void signalUpdateEndpoint();
- void signalSchedulesChanged();
- void signalStateChanged();
- void signalConnectedChanged();
+    void signalUpdateEndpoint();
+    void signalSchedulesChanged();
+    void signalStateChanged();
+    void signalConnectedChanged();
 public slots:
-
-private slots:
-
-private:
+    void slotReceivedIdentMessage(QTcpSocket* socket, QString alias, QString type, QString MAC);
+protected slots:
+    void slotDisconnected();
+    void slotSocketError(QAbstractSocket::SocketError socketError);
+    void slotResetTimeout();
+    void slotKeepAliveTimeout();
+protected:
     QString alias;
     QString type;
     QString MAC;
+    QTcpSocket* clientSocket;
+    EndpointDataReceiver* dataReceiver;
+    EndpointDataTransmitter* dataTransmitter;
     bool connected;
     bool state;
+private:
+    void receivedData();
+    //This timer is started if after each received state (equals keep Alive heartbeat)
+    //if it triggers this endpoint eappears to be disconnected and the socket is closed
+    QTimer* keepAliveTimeoutTimer;
     virtual void serialize(QDataStream &ds) = 0;
     virtual void unserialize(QDataStream &ds) = 0;
 };

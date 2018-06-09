@@ -13,5 +13,6 @@ HEADERS += \
     $$PWD/EndpointDataReceiver.h \
     $$PWD/EndpointDataTransmitter.h \
     $$PWD/UiDataReceiver.h \
-    $$PWD/UiDataTransmitter.h
+    $$PWD/UiDataTransmitter.h \
+    $$PWD/endpointtypes.h
 

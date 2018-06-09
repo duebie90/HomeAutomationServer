@@ -8,7 +8,8 @@
 #include <PersistanceService.h>
 #include <SchedulingService.h>
 #include <websocketserver.h>
-
+#include <EndpointFactory.h>
+#include <endpointtypes.h>
 
 #define tempPassword "fhkiel"
 
@@ -97,12 +98,10 @@ void HomeAutomationController::slotProcessMessageNewEndpoint(QTcpSocket* socket,
     if (alias != "" && type!="" && MAC != "") {
         //message seems to be valid
         //so check if that Endpoint is already known
-        if(ps->getEndpointByMac(MAC) != NULL) {
+        AbstractEndpoint* reconnectedEndpoint = ps->getEndpointByMac(MAC);
+        if(reconnectedEndpoint != NULL) {
             //The Endpoint is already known
-            cout<<"Endpoint with alias "<<alias.toStdString()<<" has reconnected\n";
-
-            Endpoint* reconnectedEndpoint;
-            reconnectedEndpoint = static_cast<Endpoint*>(ps->getEndpointByMac(MAC));
+            cout<<"Endpoint with alias "<<alias.toStdString()<<" has reconnected\n";                        
             reconnectedEndpoint->setAlias(alias);
             reconnectedEndpoint->updateSocket(socket);
             reconnectedEndpoint->ackIdentification();
@@ -160,8 +159,12 @@ void HomeAutomationController::addUiConnection(QTcpSocket* socket, QString alias
     QTimer::singleShot(10, this, SLOT(slotUpdateUis()) );
 }
 
-void HomeAutomationController::addEndpoint(QTcpSocket* socket, QString alias, QString type, QString MAC) {
-    Endpoint* newEndpoint = new Endpoint(socket, alias, type, MAC);
+void HomeAutomationController::addEndpoint(QTcpSocket* socket, QString alias, QString type, QString MAC) {    
+    // fake type for debug
+    AbstractEndpoint* newEndpoint = EndpointFactory::getInstance()->getNewEndpointByType(ENDPOINT_TYPE_SWITCHBOX);
+    newEndpoint->setAlias(alias);
+    newEndpoint->updateSocket(socket);
+    newEndpoint->setMAC(MAC);
     connect(newEndpoint, SIGNAL(signalStateChanged()), this, SLOT(slotUpdateUis()));
     connect(newEndpoint, SIGNAL(signalSchedulesChanged()), this, SLOT(slotUpdateUis()));
     connect(newEndpoint, SIGNAL(signalConnectedChanged()), this, SLOT(slotUpdateUis()));

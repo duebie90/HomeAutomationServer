@@ -7,7 +7,7 @@ class HeatingEndpoint : public Endpoint
 {
     Q_OBJECT
 public:
-    HeatingEndpoint(QTcpSocket* socket, QString alias, QString type, QString MAC="", QObject* parent=0);
+    HeatingEndpoint(QTcpSocket* socket=nullptr, QString alias="", QString type="", QString MAC="", QObject* parent=nullptr);
     ~HeatingEndpoint();
 };
 
