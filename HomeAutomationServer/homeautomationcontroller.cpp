@@ -37,8 +37,8 @@ HomeAutomationController::HomeAutomationController(QObject *parent):
     connect(this, SIGNAL(signalUpdateUis()), this, SLOT(slotUpdateUis()));
     //connect(this, SIGNAL(signalUpdateUis()), this, SLOT(slotUpdateUis()));
 
-    connect(tcpServer, SIGNAL(signalReceivedEndpointIdent(QTcpSocket*,QString,QString,QString)), this,
-            SLOT(slotProcessMessageNewEndpoint(QTcpSocket*,QString,QString,QString)));
+    connect(tcpServer, SIGNAL(signalReceivedEndpointIdent(QTcpSocket*,QString,EndpointTypes,QString)), this,
+            SLOT(slotProcessMessageNewEndpoint(QTcpSocket*,QString,EndpointTypes,QString)));
     connect(tcpServer, SIGNAL(signalReceivedUiIdent(QTcpSocket*,QString, QString, QString)),
             this, SLOT( slotProcessMessageNewUi(QTcpSocket*,QString,QString, QString)));    
 
@@ -93,9 +93,9 @@ void HomeAutomationController::slotUiDisconnected()
     this->uiConnections.removeOne(disconnectedUi);
 }
 
-void HomeAutomationController::slotProcessMessageNewEndpoint(QTcpSocket* socket, QString alias, QString type, QString MAC) {
+void HomeAutomationController::slotProcessMessageNewEndpoint(QTcpSocket* socket, QString alias, EndpointTypes type, QString MAC) {
     cout<<"Endpoint identification received\n";
-    if (alias != "" && type!="" && MAC != "") {
+    if (alias != "" && MAC != "") {
         //message seems to be valid
         //so check if that Endpoint is already known
         AbstractEndpoint* reconnectedEndpoint = ps->getEndpointByMac(MAC);
@@ -159,9 +159,9 @@ void HomeAutomationController::addUiConnection(QTcpSocket* socket, QString alias
     QTimer::singleShot(10, this, SLOT(slotUpdateUis()) );
 }
 
-void HomeAutomationController::addEndpoint(QTcpSocket* socket, QString alias, QString type, QString MAC) {    
+void HomeAutomationController::addEndpoint(QTcpSocket* socket, QString alias, EndpointTypes type, QString MAC) {
     // fake type for debug
-    AbstractEndpoint* newEndpoint = EndpointFactory::getInstance()->getNewEndpointByType(ENDPOINT_TYPE_SWITCHBOX);
+    AbstractEndpoint* newEndpoint = EndpointFactory::getInstance()->getNewEndpointByType(type);
     newEndpoint->setAlias(alias);
     newEndpoint->updateSocket(socket);
     newEndpoint->setMAC(MAC);

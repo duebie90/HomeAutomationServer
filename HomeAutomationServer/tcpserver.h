@@ -6,6 +6,7 @@
 #include <QNetworkSession>
 #include <UiDataReceiver.h>
 #include <UiDataTransmitter.h>
+#include <endpointtypes.h>
 
 class TcpServer: public QObject
 {
@@ -26,7 +27,7 @@ private slots:
 signals:
     void signalClientConnected(QTcpSocket *client);
     //Signal forwarded from DataReceiver to HomeAutomationController
-    void signalReceivedEndpointIdent(QTcpSocket* socket, QString alias, QString type, QString MAC);
+    void signalReceivedEndpointIdent(QTcpSocket* socket, QString alias, EndpointTypes type, QString MAC);
     void signalReceivedUiIdent(QTcpSocket* socket, QString alias, QString pass, QString MAC);
 
 private:

@@ -66,7 +66,7 @@ QList<AbstractEndpoint *> PersistanceService::loadEndpoints()
     int autoIndex = query.record().indexOf("autoState");
     while (query.next()) {
         QString alias = query.value(nameIndex).toString();
-        QString type = query.value(typeIndex).toString();
+        EndpointTypes type = query.value(typeIndex).value<EndpointTypes>();
         QString macAddress = query.value(macIndex).toString();        
         AbstractEndpoint* newEndpoint = new Endpoint(NULL, alias, type, macAddress);
         newEndpoint->setConnected(false);
@@ -153,7 +153,7 @@ bool PersistanceService::addEndpoint(AbstractEndpoint *endpoint) {
     int id = getEndpointCount();
     QString name = endpoint->getAlias();
     QString MAC  = endpoint->getMAC();
-    QString type = endpoint->getType();
+    EndpointTypes type = endpoint->getType();
     bool state =  static_cast<Endpoint*>(endpoint)->getState();
     bool requestedState = static_cast<Endpoint*>(endpoint)->getRequestedState();
     bool autoState      = static_cast<Endpoint*>(endpoint)->isAutoControlled();

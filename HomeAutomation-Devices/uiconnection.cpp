@@ -97,7 +97,7 @@ void UiConnection::sendEndpointsUpdate(QList<AbstractEndpoint *> endpoints){
     QString endpointType = "SwitchBox";
     out<<endpointsCount;
     foreach(AbstractEndpoint* endpoint, endpoints ) {
-        out<<endpointType;
+        out<<endpoint->getType();
         out<<endpoint;
     }
     this->dataTransmitter->sendMessage(MESSAGETYPE_ENDPOINTS_LIST, payload);

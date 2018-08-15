@@ -6,6 +6,7 @@
 #include <iostream>
 #include <EndpointDataReceiver.h>
 #include <EndpointDataTransmitter.h>
+#include <endpointtypes.h>
 
 //Timeout for next keep alive messages
 const int KEEP_ALIVE_TIMEOUT_MS = 5000;
@@ -15,7 +16,7 @@ class AbstractEndpoint : public QObject
 {
 Q_OBJECT
 public:
-    AbstractEndpoint(QTcpSocket* socket=nullptr, QString alias="", QString type="", QString MAC="", QObject* parent=nullptr);
+    AbstractEndpoint(QTcpSocket* socket=nullptr, QString alias="", EndpointTypes type=ENDPOINT_TYPE_SWITCHBOX, QString MAC="", QObject* parent=nullptr);
     AbstractEndpoint();
     bool isConnected();
     void setConnected(bool connected);
@@ -23,7 +24,7 @@ public:
     void setAlias(QString alias);    
     QString getMAC();
     void setMAC(QString MAC);
-    QString getType();
+    EndpointTypes getType();
     virtual bool getState();
     virtual void setState(bool);
     virtual void updateSocket(QTcpSocket* newSocket);
@@ -63,7 +64,7 @@ protected slots:
     void slotKeepAliveTimeout();
 protected:
     QString alias;
-    QString type;
+    EndpointTypes type;
     QString MAC;
     QTcpSocket* clientSocket;
     EndpointDataReceiver* dataReceiver;

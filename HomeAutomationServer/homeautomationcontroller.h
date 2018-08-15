@@ -4,6 +4,7 @@
 #include <QObject>
 #include <endpoint.h>
 #include <uiconnection.h>
+#include <endpointtypes.h>
 #include <QtNetwork>
 #include <tcpserver.h>
 #include <UiDataReceiver.h>
@@ -24,7 +25,7 @@ signals:
 private slots:
     void slotUpdateUis();
     void slotProcessMessageNewUi(QTcpSocket* socket, QString alias, QString pass, QString MAC);
-    void slotProcessMessageNewEndpoint(QTcpSocket* socket, QString alias, QString type, QString MAC);
+    void slotProcessMessageNewEndpoint(QTcpSocket* socket, QString alias, EndpointTypes type, QString MAC);
 
     void slotForwardDeleteEndpoint(QString mac);
     void slotForwardEndpointDeleteSchedule(QString mac, int id);
@@ -38,7 +39,7 @@ private:
     static HomeAutomationController *_instance;
 
     void addUiConnection(QTcpSocket* socket, QString alias);
-    void addEndpoint(QTcpSocket* socket, QString alias, QString type, QString MAC);
+    void addEndpoint(QTcpSocket* socket, QString alias, EndpointTypes type, QString MAC);
 
     TcpServer* tcpServer;
     //Clients which are identified as Endpoints

@@ -3,7 +3,7 @@
 // For debug purposes connection timeout can be deactivated
 #define NO_TIMEOUT (true)
 
-AbstractEndpoint::AbstractEndpoint(QTcpSocket* socket, QString alias, QString type, QString MAC, QObject* parent)
+AbstractEndpoint::AbstractEndpoint(QTcpSocket* socket, QString alias, EndpointTypes type, QString MAC, QObject* parent)
     : QObject(parent)
 {
     this->alias = alias;
@@ -90,7 +90,7 @@ void AbstractEndpoint::setConnected(bool connected){
     this->connected = connected;
 }
 
-QString AbstractEndpoint::getType(){
+EndpointTypes AbstractEndpoint::getType(){
     return this->type;
 }
 

@@ -1,43 +1,23 @@
 #include "endpoint.h"
-
+#include <string>
 class PersistanceService;
 
 #include <../HomeAutomation-Services/PersistanceService.h>
 
 #define NO_TIMEOUT (true)
 
-Endpoint::Endpoint(QTcpSocket* socket, QString alias, QString type, QString MAC, QObject* parent):
-    AbstractEndpoint(alias, type, MAC, parent)
+Endpoint::Endpoint(QTcpSocket* socket, QString alias, EndpointTypes type, QString MAC, QObject* parent):
+    AbstractEndpoint(socket, alias, type, MAC, parent)
 {
-    cout<<"Endpoint-Object created with alias "<<alias.toStdString()<<" and type "<<type.toStdString()<<".\n";
-    this->clientSocket = socket;
-    this->alias = alias;
-    this->type = type;
-    this->MAC = MAC;
-    this->state = false;
+    cout<<"Endpoint-Object created with alias "<<alias.toStdString()<<" and type "<<QString::number(type).toStdString()<<".\n";
+    this->state = false;    
     this->requestedState = false;
-    this->dataReceiver = new EndpointDataReceiver();
-    this->dataTransmitter = new EndpointDataTransmitter(socket);
     this->autoControlled = false;
     this->autoControlledState = false;
-    this->stateChangePending = false;
-    if(clientSocket != NULL) {
-        connect(clientSocket, SIGNAL(readyRead()), dataReceiver, SLOT(slotReceivedData()));
-        connect(clientSocket, SIGNAL(disconnected()), this, SLOT(slotDisconnected()));
-        connect(clientSocket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(slotSocketError(QAbstractSocket::SocketError)));
-        //clientSocket->setSocketOption(QAbstractSocket::KeepAliveOption, QVariant::fromValue(true));
-    }
-
+    this->stateChangePending = false;    
     connect(dataReceiver, SIGNAL(signalReceivedEndpointState(QString,bool)), this, SLOT(slotReceivedState(QString,bool)));
     connect(dataReceiver, SIGNAL(signalReceivedEndpointIdent(QTcpSocket*,QString,QString,QString)), this,
-            SLOT(slotReceivedIdentMessage(QTcpSocket*,QString,QString,QString)));
-    connect(dataReceiver, SIGNAL(signalReceivedHeartbeat()), this, SLOT(slotResetTimeout()));
-    this->connected = true;
-
-    this->keepAliveTimeoutTimer = new QTimer();
-    this->keepAliveTimeoutTimer->setInterval(KEEP_ALIVE_TIMEOUT_MS);
-    this->keepAliveTimeoutTimer->setSingleShot(true);
-    connect(this->keepAliveTimeoutTimer, SIGNAL(timeout()), this, SLOT(slotKeepAliveTimeout()));
+            SLOT(slotReceivedIdentMessage(QTcpSocket*,QString,QString,QString)));        
 }
 
 void Endpoint::serialize(QDataStream &ds){
@@ -87,38 +67,6 @@ void Endpoint::slotStateRequested(bool state) {
 
 }
 
-void Endpoint::slotSocketError(QAbstractSocket::SocketError socketError)
-{
-    switch (socketError) {
-     case QAbstractSocket::ConnectionRefusedError:
-          cout<<"Endpoint " + getAlias().toStdString() + "Socket Error: Connection refused \n";
-          break;
-     case QAbstractSocket::RemoteHostClosedError:
-        this->clientSocket->close();
-        break;
-     default:
-        cout<<"Endpoint " + getAlias().toStdString() + "Socket Error: \n";
-        break;
-    }
-}
-
-void Endpoint::slotResetTimeout()
-{
-    this->keepAliveTimeoutTimer->stop();
-    this->keepAliveTimeoutTimer->start();
-}
-
-void Endpoint::slotKeepAliveTimeout()
-{
-    if(!NO_TIMEOUT) {
-        cout<<"Endpoint "<<getAlias().toStdString()<<" disconnected. (Timeout)\n";
-        setConnected(false);
-        if(this->clientSocket != NULL ) {
-            this->clientSocket->close();
-        }
-    }
-}
-
 void Endpoint::slotPerformEvent(ScheduleEvent *event)
 {
     qDebug()<<__FUNCTION__<<" Alias: "<<getAlias()<<" EventType: "<<event->getType();
@@ -143,20 +91,6 @@ void Endpoint::slotPerformEvent(ScheduleEvent *event)
     if (!event->isPending()) {
         this->scheduleEvents.remove(event->getId());
     }
-}
-
-void Endpoint::slotReceivedIdentMessage(QTcpSocket *socket, QString alias, QString type, QString MAC)
-{
-    Q_UNUSED(socket)
-    Q_UNUSED(alias)
-    Q_UNUSED(type)
-    if(QString::compare(MAC, this->getMAC(),Qt::CaseSensitive) == 0) {
-        ackIdentification();
-    }
-}
-
-void Endpoint::sendMessage(MessageType type, QByteArray message){
-    this->dataTransmitter->sendMessage(type, message);
 }
 
 QMap<int, ScheduleEvent*> Endpoint::getScheduledEvents()
@@ -208,68 +142,13 @@ bool Endpoint::isStateChangePending()
     return this->stateChangePending;
 }
 
-void Endpoint::slotDisconnected() {    
-    cout<<__FUNCTION__<<" Alias "<<this->alias.toStdString()<<"\n";
-    setConnected(false);
-    if (clientSocket != NULL) {
-        disconnect(clientSocket, SIGNAL(readyRead()), dataReceiver, SLOT(slotReceivedData()));
-        disconnect(clientSocket, SIGNAL(disconnected()), this, SLOT(slotDisconnected()));
-    }
-    emit signalConnectedChanged();
-}
-
 void Endpoint::updateSocket(QTcpSocket* newSocket) {    
-    cout<<__FUNCTION__<<"Alias "<<this->alias.toStdString()<<"\n";
-    this->clientSocket = newSocket;
-    this->dataTransmitter->updateSocket(newSocket);    
-    connect(clientSocket, SIGNAL(readyRead()), dataReceiver, SLOT(slotReceivedData()));
-    connect(clientSocket, SIGNAL(disconnected()), this, SLOT(slotDisconnected()));
-    connect(clientSocket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(slotSocketError(QAbstractSocket::SocketError)));
-    clientSocket->setSocketOption(QAbstractSocket::KeepAliveOption, QVariant::fromValue(true));
-    setConnected(true);
+    AbstractEndpoint::updateSocket(newSocket);
     if(requestedState != state) {
         //a state change was requested when this endpoint was offline
         //now try to send request again
         requestState(requestedState);
-    }
-    this->keepAliveTimeoutTimer->start();
-}
-
-bool Endpoint::isConnected() {
-    return this->connected;
-}
-void Endpoint::setConnected(bool connected){    
-    this->connected = connected;
-    emit signalConnectedChanged();
-    if(connected) {
-        this->keepAliveTimeoutTimer->start();
-    }
-}
-
-QString Endpoint::getAlias() {
-    return alias;
-}
-
-void Endpoint::setAlias(QString newAlias)
-{
-    this->alias = newAlias;
-    AbstractEndpoint* ae = dynamic_cast<AbstractEndpoint*>(this);
-    PersistanceService::getInstance()->updateEndpoint(ae);
-}
-QString Endpoint::getType() {
-    return type;
-}
-QString Endpoint::getMAC() {
-    return MAC;
-}
-void Endpoint::setState(bool state) {
-    if (state != this->state) {
-        this->state = state;
-        emit signalStateChanged();
-    }
-}
-bool Endpoint::getState() {
-    return this->state;
+    }    
 }
 
 bool Endpoint::getRequestedState()
@@ -294,13 +173,6 @@ bool Endpoint::isAutoControlled()
     return this->autoControlled;
 }
 
-bool Endpoint::ackIdentification()
-{
-    QByteArray payload;
-    payload.append(getMAC());
-    this->dataTransmitter->sendMessage(MESSAGETYPE_ENDPOINT_IDENT_ACK,payload);
-    return true;
-}
 
 void Endpoint::requestState(bool state){
     //save the requested state for later

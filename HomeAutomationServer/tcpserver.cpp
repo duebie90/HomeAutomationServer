@@ -1,5 +1,5 @@
 #include "tcpserver.h"
-
+#include "endpointtypes.h"
 #include <QtNetwork>
 
 //#include <QTcpServer>
@@ -188,7 +188,8 @@ int TcpServer::processProtocollHeader(QTcpSocket *socket, QByteArray data)
 void TcpServer::processMessage(QTcpSocket *socket, MessageType type, QByteArray payload)
 {
     QList<QByteArray> payloadParts = payload.split(0x1F);
-    QString alias, MAC, endpointType, pass;
+    QString alias, MAC, pass;
+    EndpointTypes endpointType;
     switch(type) {
     case MESSAGETYPE_UI_INFO:
         cout<<__FUNCTION__<<"Recognized UI Ident\n";
@@ -208,8 +209,7 @@ void TcpServer::processMessage(QTcpSocket *socket, MessageType type, QByteArray 
         }
         alias   =   payloadParts.at(0);
         MAC     =   payloadParts.at(1);
-        endpointType = payloadParts.at(2);
-
+        endpointType = (EndpointTypes)payloadParts.at(2)[0];
         emit signalReceivedEndpointIdent(socket, alias, endpointType, MAC);
         break;
     }

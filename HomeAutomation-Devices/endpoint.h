@@ -11,29 +11,17 @@
 #include <ScheduleEvent.h>
 #include <abstractendpoint.h>
 
-//Timeout for next keep alive messages
-const int KEEP_ALIVE_TIMEOUT_MS = 5000;
-
 using namespace std;
 class Endpoint: public AbstractEndpoint
 {
 Q_OBJECT
 public:
-    Endpoint(QTcpSocket* socket, QString alias, QString type, QString MAC="", QObject* parent=0);
+    Endpoint(QTcpSocket* socket=nullptr, QString alias="", EndpointTypes type=ENDPOINT_TYPE_SWITCHBOX, QString MAC="", QObject* parent=nullptr);
     ~Endpoint();
     void updateSocket(QTcpSocket* newSocket);
-    bool isConnected();
-    void setConnected(bool connected);
-    QString getAlias();
-    void setAlias(QString newAlias);
-    QString getType();
-    QString getMAC();
-    bool getState();
-    void setState(bool);
     bool getRequestedState();
     void setAuto(bool autoControlled);
-    bool isAutoControlled();
-    bool ackIdentification();
+    bool isAutoControlled();    
     void requestState(bool state);
     void sendMessage(MessageType type, QByteArray message);
     QMap<int, ScheduleEvent*> getScheduledEvents();
@@ -42,12 +30,6 @@ public:
     void updateScheduleEvent(ScheduleEvent* event);
     void removeSchedule(int id);
     bool isStateChangePending();
-    enum EndpointType {
-        //those are example
-        switchbox,
-        temperatureSensor,
-        lightSwitch
-    };
 
     //friend QDataStream &ScheduleEvent::operator<<(QDataStream &ds, AbstractEndpoint *obj)
     //serialize to send
@@ -75,29 +57,16 @@ signals:
     void signalConnectedChanged();
 public slots:
     //called by SchedulingService
-    void slotPerformEvent(ScheduleEvent* event);
-    void slotReceivedIdentMessage(QTcpSocket* socket, QString alias, QString type, QString MAC);
-private slots:    
-    void slotDisconnected();
+    void slotPerformEvent(ScheduleEvent* event);    
+private slots:        
     //from hardware endpoint
     void slotReceivedState(QString MAC, bool state);    
     //from ui-controller
     void slotStateRequested(bool state);
-
-    void slotSocketError(QAbstractSocket::SocketError socketError);
-    void slotResetTimeout();
-    void slotKeepAliveTimeout();
 private:
-    void receivedData();
+
     void serialize(QDataStream &ds);
     void unserialize(QDataStream &ds);
-    QString alias;
-    QString type;
-    QString MAC;    
-    QTcpSocket* clientSocket;
-    EndpointDataReceiver* dataReceiver;
-    EndpointDataTransmitter* dataTransmitter;
-    bool connected;
     //state which was ACK by endpoint
     bool state;
     //state which was requested: manually or automatically
@@ -109,9 +78,6 @@ private:
     //state which was there if auto-controlled
     bool autoControlledState;
 
-    //This timer is started if after each received state (equals keep Alive heartbeat)
-    //if it triggers this endpoint eappears to be disconnected and the socket is closed
-    QTimer* keepAliveTimeoutTimer;
     QMap<int, ScheduleEvent*> scheduleEvents;
 };
 
