@@ -119,7 +119,7 @@ void ScheduleEvent::setPerformed()
         //on saturday and sunday
         do {
             this->date.addDays(1);
-        }while(!this->date.dayOfWeek()==6 || !this->date.dayOfWeek()==7);
+        }while(!(this->date.dayOfWeek()==6) || !(this->date.dayOfWeek()==7));
         break;
     case REPETITION_TYPE_WEEKLY:
         this->date.addDays(7);
