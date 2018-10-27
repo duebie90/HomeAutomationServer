@@ -68,11 +68,17 @@ QList<AbstractEndpoint *> PersistanceService::loadEndpoints()
         QString alias = query.value(nameIndex).toString();
         EndpointTypes type = query.value(typeIndex).value<EndpointTypes>();
         QString macAddress = query.value(macIndex).toString();        
-        AbstractEndpoint* newEndpoint = new Endpoint(NULL, alias, type, macAddress);
+        AbstractEndpoint* newEndpoint = EndpointFactory::getInstance()->getNewEndpointByType(type);
         newEndpoint->setConnected(false);
-        static_cast<Endpoint*>(newEndpoint)->setState(query.value(stateIndex).toBool());
-        static_cast<Endpoint*>(newEndpoint)->requestState(query.value(requestedStateIndex).toBool());
-        static_cast<Endpoint*>(newEndpoint)->setAuto(query.value(autoIndex).toBool());
+        newEndpoint->setMAC(macAddress);
+        newEndpoint->setAlias(alias);
+        if(type == ENDPOINT_TYPE_SWITCHBOX){
+            static_cast<Endpoint*>(newEndpoint)->setState(query.value(stateIndex).toBool());
+            static_cast<Endpoint*>(newEndpoint)->requestState(query.value(requestedStateIndex).toBool());
+            static_cast<Endpoint*>(newEndpoint)->setAuto(query.value(autoIndex).toBool());
+        }else{
+            //Heating specific data
+        }
         endpoints.append(newEndpoint);
     }
     //

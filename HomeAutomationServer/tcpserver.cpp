@@ -35,6 +35,7 @@ TcpServer::TcpServer(QString address, int port, QObject *parent):
 
 
 TcpServer::~TcpServer() {
+    tcpServer->close();
     clientSockets.clear();
     mapClientsPendingIdentificationToDisconnectTimers.clear();
 }

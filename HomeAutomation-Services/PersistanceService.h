@@ -3,8 +3,7 @@
 
 #include <QObject>
 #include <QSqlDatabase>
-#include <endpoint.h>
-#include <abstractendpoint.h>
+#include "EndpointFactory.h"
 #include <QTimer>
 class PersistanceService : public QObject
 {

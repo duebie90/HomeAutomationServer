@@ -71,9 +71,19 @@ void HomeAutomationController::slotResetServer() {
     cout<<"Disconnecting all endpoints and resetting stored server data\n";
     //clear permanently stored data (ini or Sqlite)
     tcpServer->resetClientsPendingIdentification();
+
     endpointsPendingConfirmation.clear();
     ps->deleteEndpointsDatabase();
     ss->setEndpoints(ps->getSwitchboxEndpoints());
+
+//    delete tcpServer;
+//    // restart tcp server
+//    this->tcpServer = new TcpServer("localhost", 3000);
+//    connect(tcpServer, SIGNAL(signalReceivedEndpointIdent(QTcpSocket*,QString,EndpointTypes,QString)), this,
+//            SLOT(slotProcessMessageNewEndpoint(QTcpSocket*,QString,EndpointTypes,QString)));
+//    connect(tcpServer, SIGNAL(signalReceivedUiIdent(QTcpSocket*,QString, QString, QString)),
+//            this, SLOT( slotProcessMessageNewUi(QTcpSocket*,QString,QString, QString)));
+
 }
 
 void HomeAutomationController::slotDeleteEndpoint(QString MAC) {
@@ -106,7 +116,8 @@ void HomeAutomationController::slotProcessMessageNewEndpoint(QTcpSocket* socket,
             reconnectedEndpoint->updateSocket(socket);
             reconnectedEndpoint->ackIdentification();
             //dequeue unIdentified socket
-            tcpServer->clientIdentified(socket);            
+            tcpServer->clientIdentified(socket);
+            emit signalUpdateUis();
         } else {
             addEndpoint(socket, alias, type, MAC);
             tcpServer->clientIdentified(socket);
