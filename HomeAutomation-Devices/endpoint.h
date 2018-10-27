@@ -30,6 +30,7 @@ public:
     void updateScheduleEvent(ScheduleEvent* event);
     void removeSchedule(int id);
     bool isStateChangePending();
+    void setStateChangePending(bool);
 
     //friend QDataStream &ScheduleEvent::operator<<(QDataStream &ds, AbstractEndpoint *obj)
     //serialize to send

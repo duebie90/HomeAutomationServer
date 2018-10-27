@@ -30,12 +30,20 @@ void Endpoint::serialize(QDataStream &ds){
 }
 
 void Endpoint::unserialize(QDataStream &ds){
-    ds<<this->getAlias();
-    ds<<this->getMAC();
-    ds<<this->getState();
-    ds<<this->isAutoControlled();
-    ds<<this->isConnected();
-    ds<<this->isStateChangePending();
+    QString alias;
+    QString mac;
+    bool state;
+    bool autoOn;
+    bool connected;
+    bool stateChangePending;
+    ds>>alias>>mac>>state>>autoOn>>connected>>stateChangePending;
+
+    setAlias(alias);
+    setMAC(mac);
+    this->setStateChangePending(stateChangePending);
+    this->setState(state);
+    this->setAuto(autoOn);
+    this->setConnected(connected);
 }
 
 Endpoint::~Endpoint() {
@@ -140,6 +148,10 @@ void Endpoint::removeSchedule(int id)
 bool Endpoint::isStateChangePending()
 {
     return this->stateChangePending;
+}
+
+void Endpoint::setStateChangePending(bool stateChangePending){
+    this->stateChangePending = stateChangePending;
 }
 
 void Endpoint::updateSocket(QTcpSocket* newSocket) {    
